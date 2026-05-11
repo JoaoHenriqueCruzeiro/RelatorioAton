@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Modal Dashboard</title>
+  
+
+  <style>
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:Arial, Helvetica, sans-serif;
+    }
+
+    body{
+      background:#f3f4f6;
+      height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    /* BOTÃO */
+    .open-modal-btn{
+      padding:14px 22px;
+      border:none;
+      border-radius:10px;
+      background:#6d28d9;
+      color:white;
+      font-size:16px;
+      cursor:pointer;
+      transition:.2s;
+    }
+
+    .open-modal-btn:hover{
+      background:#5b21b6;
+    }
+
+    /* OVERLAY */
+    .modal-overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.45);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      z-index:999;
+    }
+
+    .modal-overlay.active{
+      display:flex;
+    }
+
+    /* MODAL */
+    .modal{
+      width:720px;
+      max-width:100%;
+      background:white;
+      border-radius:22px;
+      overflow:hidden;
+      box-shadow:0 20px 60px rgba(0,0,0,.25);
+      animation:fade .2s ease;
+    }
+
+    @keyframes fade{
+      from{
+        opacity:0;
+        transform:translateY(10px) scale(.98);
+      }
+      to{
+        opacity:1;
+        transform:translateY(0) scale(1);
+      }
+    }
+
+    .modal-header{
+      padding:28px 30px 18px;
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+    }
+
+    .modal-title{
+      font-size:32px;
+      font-weight:700;
+      margin-bottom:8px;
+    }
+
+    .modal-subtitle{
+      color:#666;
+      font-size:15px;
+      line-height:1.5;
+    }
+
+    .close-btn{
+      background:none;
+      border:none;
+      font-size:28px;
+      cursor:pointer;
+      color:#999;
+    }
+
+    .divider{
+      height:1px;
+      background:#e5e7eb;
+    }
+
+    .modal-content{
+      padding:28px 30px;
+    }
+
+    .section-title{
+      font-size:18px;
+      font-weight:700;
+      margin-bottom:8px;
+    }
+
+    .section-subtitle{
+      color:#777;
+      margin-bottom:24px;
+    }
+
+    /* CORES */
+    .colors{
+      display:flex;
+      gap:14px;
+      margin-bottom:34px;
+      flex-wrap:wrap;
+    }
+
+    .color{
+      width:34px;
+      height:34px;
+      border-radius:50%;
+      cursor:pointer;
+      border:3px solid transparent;
+    }
+
+    .color.active{
+      outline:3px solid #7c3aed;
+    }
+
+    /* MODOS */
+    .modes{
+      display:flex;
+      gap:18px;
+      flex-wrap:wrap;
+    }
+
+    .mode-card{
+      width:200px;
+      border:2px solid #e5e7eb;
+      border-radius:16px;
+      padding:10px;
+      cursor:pointer;
+      transition:.2s;
+    }
+
+    .mode-card.active{
+      border-color:#7c3aed;
+      box-shadow:0 0 0 3px rgba(124,58,237,.15);
+    }
+
+    .mode-preview{
+      height:120px;
+      border-radius:12px;
+      overflow:hidden;
+      display:flex;
+    }
+
+    .sidebar{
+      width:30%;
+      background:#f3f4f6;
+    }
+
+    .content{
+      flex:1;
+      background:white;
+      position:relative;
+    }
+
+    .graph{
+      position:absolute;
+      width:70%;
+      height:2px;
+      background:#7c3aed;
+      top:60%;
+      left:15%;
+      transform:rotate(-8deg);
+    }
+
+    .dark .sidebar{
+      background:#111827;
+    }
+
+    .dark .content{
+      background:#0f172a;
+    }
+
+    .mode-label{
+      margin-top:12px;
+      font-weight:600;
+      font-size:15px;
+    }
+
+    /* FOOTER */
+    .modal-footer{
+      padding:22px 30px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      border-top:1px solid #e5e7eb;
+    }
+
+    .checkbox{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      color:#666;
+      font-size:15px;
+    }
+
+    .footer-buttons{
+      display:flex;
+      gap:12px;
+    }
+
+    .btn{
+      padding:12px 18px;
+      border-radius:10px;
+      border:none;
+      font-size:15px;
+      font-weight:600;
+      cursor:pointer;
+    }
+
+    .btn-secondary{
+      background:#f3f4f6;
+      color:#333;
+    }
+
+    .btn-primary{
+      background:#6d28d9;
+      color:white;
+    }
+
+    .btn-primary:hover{
+      background:#5b21b6;
+    }
+
+  </style>
+</head>
+<body>
+
+  <button class="open-modal-btn" id="openModal">
+    Abrir Modal
+  </button>
+
+  <!-- OVERLAY -->
+  <div class="modal-overlay" id="modalOverlay">
+
+    <!-- MODAL -->
+    <div class="modal">
+
+      <div class="modal-header">
+        <div>
+          <h1 class="modal-title">Appearance</h1>
+          <p class="modal-subtitle">
+            Change how your dashboard looks and feels in your browser.
+          </p>
+        </div>
+
+        <button class="close-btn" id="closeModal">
+          &times;
+        </button>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="modal-content">
+
+        <h3 class="section-title">Brand color</h3>
+        <p class="section-subtitle">
+          Update your dashboard to your brand color.
+        </p>
+
+        <div class="colors">
+          <div class="color" style="background:#4b5563"></div>
+          <div class="color" style="background:#16a34a"></div>
+          <div class="color" style="background:#2563eb"></div>
+          <div class="color active" style="background:#7c3aed"></div>
+          <div class="color" style="background:#db2777"></div>
+          <div class="color" style="background:#ea580c"></div>
+        </div>
+
+        <h3 class="section-title">Display preference</h3>
+        <p class="section-subtitle">
+          Switch between light and dark modes.
+        </p>
+
+        <div class="modes">
+
+          <div class="mode-card active">
+            <div class="mode-preview dark">
+              <div class="sidebar"></div>
+              <div class="content">
+                <div class="graph"></div>
+              </div>
+            </div>
+            <div class="mode-label">System preference</div>
+          </div>
+
+          <div class="mode-card">
+            <div class="mode-preview">
+              <div class="sidebar"></div>
+              <div class="content">
+                <div class="graph"></div>
+              </div>
+            </div>
+            <div class="mode-label">Light mode</div>
+          </div>
+
+          <div class="mode-card">
+            <div class="mode-preview dark">
+              <div class="sidebar"></div>
+              <div class="content">
+                <div class="graph"></div>
+              </div>
+            </div>
+            <div class="mode-label">Dark mode</div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+
+        <label class="checkbox">
+          <input type="checkbox">
+          Apply to all teams
+        </label>
+
+        <div class="footer-buttons">
+          <button class="btn btn-secondary" id="cancelBtn">
+            Cancel
+          </button>
+
+          <button class="btn btn-primary">
+            Save changes
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const modalOverlay = document.getElementById('modalOverlay');
+    const openModal = document.getElementById('openModal');
+    const closeModal = document.getElementById('closeModal');
+    const cancelBtn = document.getElementById('cancelBtn');
+
+    openModal.addEventListener('click', () => {
+      modalOverlay.classList.add('active');
+    });
+
+    function fecharModal(){
+      modalOverlay.classList.remove('active');
+    }
+
+    closeModal.addEventListener('click', fecharModal);
+    cancelBtn.addEventListener('click', fecharModal);
+
+    modalOverlay.addEventListener('click', (e) => {
+      if(e.target === modalOverlay){
+        fecharModal();
+      }
+    });
+  </script>
+
+</body>
+</html>
