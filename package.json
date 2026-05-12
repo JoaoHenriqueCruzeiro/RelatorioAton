@@ -12,9 +12,11 @@
     "start": "concurrently \"npm run dev\" \"npm run electron\""
   },
   "dependencies": {
+    "chart.js": "^4.5.1",
     "devextreme": "25.2.7",
     "devextreme-react": "25.2.7",
     "react": "^18.3.1",
+    "react-chartjs-2": "^5.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {

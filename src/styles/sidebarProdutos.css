@@ -1,0 +1,24 @@
+.sidebar-produtos {
+  width: 320px;
+  height: 100vh;
+
+  padding: 16px;
+
+  background: white;
+
+  border-right: 1px solid #374151;
+
+  overflow-y: auto;
+}
+
+.sidebar-header {
+  margin-bottom: 16px;
+}
+
+.sidebar-header h2 {
+  color: white;
+
+  font-size: 20px;
+
+  margin: 0;
+}
