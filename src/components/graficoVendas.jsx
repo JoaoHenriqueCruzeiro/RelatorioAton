@@ -16,7 +16,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { buscarVendasProdutos } from "../services/vendasService";
 
-import "./graficoVendas.css";
+import "../styles/graficoVendas.css";
 
 ChartJS.register(
   CategoryScale,
