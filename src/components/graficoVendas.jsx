@@ -10,11 +10,17 @@ import {
   Legend,
 } from "chart.js";
 
-import { Line, Bar, Doughnut } from "react-chartjs-2";
+import {
+  Line,
+  Bar,
+  Doughnut,
+} from "react-chartjs-2";
 
-import { useEffect, useMemo, useState } from "react";
-
-import { buscarVendasProdutos } from "../services/vendasService";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 import "../styles/graficoVendas.css";
 
@@ -29,51 +35,287 @@ ChartJS.register(
   Legend
 );
 
-export default function GraficoVendas({ produtosSelecionados = [] }) {
-  const [loading, setLoading] = useState(false);
+export default function GraficoVendas({
+  produtosSelecionados = [],
+}) {
 
-  const [chartType, setChartType] = useState("line");
+  const [chartType,
+  setChartType] = useState("line");
 
-  const [dados, setDados] = useState({
-    labels: [],
-    valores: [],
-  });
+  const [dados,
+  setDados] = useState([]);
 
   useEffect(() => {
-    async function carregarDados() {
-      try {
-        setLoading(true);
 
-        const response = await buscarVendasProdutos(
-          produtosSelecionados
+  console.log(
+    "Produtos selecionados:",
+    produtosSelecionados
+  );
+
+  if (
+    !produtosSelecionados ||
+    produtosSelecionados.length === 0
+  ) {
+
+    setDados([]);
+
+    return;
+  }
+
+  const mock = [
+
+    {
+      mes: "Jan",
+      vendas: 120,
+    },
+
+    {
+      mes: "Fev",
+      vendas: 180,
+    },
+
+    {
+      mes: "Mar",
+      vendas: 90,
+    },
+
+    {
+      mes: "Abr",
+      vendas: 240,
+    },
+
+    {
+      mes: "Mai",
+      vendas: 300,
+    },
+
+    {
+      mes: "Jun",
+      vendas: 280,
+    },
+
+  ];
+
+  const quantidadeProdutos =
+    produtosSelecionados.length;
+
+  const resultado = mock.map(
+    (item) => ({
+
+      ...item,
+
+      vendas:
+        item.vendas *
+        quantidadeProdutos,
+
+    })
+  );
+
+  console.log(
+    "Resultado gráfico:",
+    resultado
+  );
+
+  setDados(resultado);
+
+}, [produtosSelecionados]);
+
+ const chartData = {
+
+  labels: dados.map(
+    (item) => item.mes
+  ),
+
+  datasets: [
+    {
+      label: "Quantidade de vendas",
+
+      data: dados.map(
+        (item) => item.vendas
+      ),
+
+      borderColor: "#3b82f6",
+
+      backgroundColor:
+        "rgba(59,130,246,0.35)",
+
+      pointBackgroundColor:
+        "#ffffff",
+
+      pointBorderColor:
+        "#3b82f6",
+
+      pointRadius: 5,
+
+      pointHoverRadius: 7,
+
+      borderWidth: 3,
+
+      tension: 0.4,
+
+      fill: true,
+    },
+  ],
+};
+
+const options = {
+
+  responsive: true,
+
+  maintainAspectRatio: false,
+
+  plugins: {
+
+    legend: {
+
+      labels: {
+
+        color: "#ffffff",
+
+        font: {
+
+          size: 14,
+
+        },
+
+      },
+
+    },
+
+  },
+
+  scales: {
+
+    x: {
+
+      ticks: {
+
+        color: "#d1d5db",
+
+      },
+
+      grid: {
+
+        color:
+          "rgba(255,255,255,0.08)",
+
+      },
+
+    },
+
+    y: {
+
+      ticks: {
+
+        color: "#d1d5db",
+
+      },
+
+      grid: {
+
+        color:
+          "rgba(255,255,255,0.08)",
+
+      },
+
+    },
+
+  },
+
+};
+
+
+
+  function renderChart() {
+
+    switch (chartType) {
+
+      case "bar":
+        return (
+          <Bar
+            data={chartData}
+            options={options}
+          />
         );
 
-        setDados(response);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
+      case "doughnut":
+        return (
+          <Doughnut
+            data={chartData}
+            options={options}
+          />
+        );
+
+      default:
+        return (
+          <Line
+            data={chartData}
+            options={options}
+          />
+        );
     }
+  }
 
-    carregarDados();
-  }, [produtosSelecionados]);
+  return (
 
-  const chartData = useMemo(() => {
-    return {
-      labels: dados.labels,
+    <section className="grafico-card">
 
-      datasets: [
-        {
-          label: "Quantidade de vendas",
+      <div className="grafico-header">
 
-          data: dados.valores,
+        <div>
+          <h2>
+            Vendas dos Produtos
+          </h2>
 
-          borderWidth: 2,
+          <p>
+            Últimos 6 meses
+          </p>
+        </div>
 
-          tension: 0.4,
+        <select
+          value={chartType}
 
-          fill: true
-        }]
-    }
-})}
+          onChange={(e) =>
+            setChartType(
+              e.target.value
+            )
+          }
+
+          className="chart-select"
+        >
+
+          <option value="line">
+            Linha
+          </option>
+
+          <option value="bar">
+            Barra
+          </option>
+
+          <option value="doughnut">
+            Rosca
+          </option>
+
+        </select>
+
+      </div>
+
+      <div className="grafico-container">
+
+        {produtosSelecionados.length === 0 ? (
+
+          <div className="empty-chart">
+            Selecione um produto
+          </div>
+
+        ) : (
+
+          renderChart()
+
+        )}
+
+      </div>
+
+    </section>
+  );
+}

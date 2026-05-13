@@ -12,6 +12,40 @@ const availableThemes = {
   darkViolet: "dx.darkviolet",
 };
 
+const produtos = [
+
+    {
+      id: 1,
+      nome: "Tênis Nike Delta",
+      isPai: true,
+    },
+
+    {
+      id: 2,
+      parentId: 1,
+      nome: "Nike Delta Azul",
+    },
+
+    {
+      id: 3,
+      parentId: 1,
+      nome: "Nike Delta Preto",
+    },
+
+    {
+      id: 4,
+      nome: "Tênis Adidas Forum",
+      isPai: true,
+    },
+
+    {
+      id: 5,
+      parentId: 4,
+      nome: "Adidas Forum Branco",
+    },
+
+  ];
+
 export default function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [theme, setTheme] = useState(availableThemes.light);
@@ -23,25 +57,7 @@ export default function App() {
 
   const [selectedProducts, setSelectedProducts] = useState([]);
 
-  const produtos = [
-    {
-      id: 1,
-      nome: "Tênis",
-      isCategory: true,
-    },
-
-    {
-      id: 2,
-      parentId: 1,
-      nome: "Nike Air Max",
-    },
-
-    {
-      id: 3,
-      parentId: 1,
-      nome: "Adidas Forum",
-    },
-  ];
+  
 
   return (
     <>
@@ -60,28 +76,25 @@ export default function App() {
       </section>
 
       <section id = "meio">
-        <div
-      style={{
-        display: "flex",
-        height: "100vh",
-        background: "#030712",
-      }}
-    >
+        <div className="layout">
+
       <SidebarProdutos
         produtos={produtos}
-        onSelectionChange={setSelectedProducts}
+        onSelectionChange={
+          setSelectedProducts
+        }
       />
 
-      <main
-        style={{
-          flex: 1,
-          padding: 20,
-        }}
-      >
+      <main className="content">
+
         <GraficoVendas
-          produtosSelecionados={selectedProducts}
+          produtosSelecionados={
+            selectedProducts
+          }
         />
+
       </main>
+
     </div>
       </section>
 

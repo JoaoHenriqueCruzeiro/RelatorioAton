@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 import TreeView from "devextreme-react/tree-view";
 
 import "../styles/sidebarProdutos.css";
@@ -8,48 +6,89 @@ export default function SidebarProdutos({
   produtos = [],
   onSelectionChange,
 }) {
-  const [selectedKeys, setSelectedKeys] = useState([]);
 
-  const handleSelectionChanged = (e) => {
-    const keys = e.component.getSelectedNodeKeys();
+  function handleSelectionChanged(e) {
 
-    setSelectedKeys(keys);
+    const selectedNodes =
+      e.component.getSelectedNodes();
 
-    const selectedItems = [];
+    const produtosSelecionados = [];
 
-    e.component.getSelectedNodes().forEach((node) => {
-      // evita categorias
-      if (!node.itemData.isCategory) {
-        selectedItems.push(node.itemData);
+    selectedNodes.forEach((node) => {
+
+      // PAI
+      if (node.itemData.isPai) {
+
+        node.children.forEach((child) => {
+
+          produtosSelecionados.push(
+            child.itemData
+          );
+
+        });
+
       }
+
+      // FILHO
+      else {
+
+        produtosSelecionados.push(
+          node.itemData
+        );
+
+      }
+
     });
 
-    onSelectionChange?.(selectedItems);
-  };
+    // REMOVE DUPLICADOS
+    const produtosUnicos = [
+      ...new Map(
+        produtosSelecionados.map((p) => [
+          p.id,
+          p,
+        ])
+      ).values(),
+    ];
+
+    onSelectionChange?.(produtosUnicos);
+  }
 
   return (
+
     <aside className="sidebar-produtos">
+
       <div className="sidebar-header">
         <h2>Produtos</h2>
       </div>
 
       <TreeView
         items={produtos}
-        dataStructure="tree"
+
+        dataStructure="plain"
+
         keyExpr="id"
+
         parentIdExpr="parentId"
+
         displayExpr="nome"
+
         searchEnabled={true}
+
         searchMode="contains"
-        searchEditorOptions={{
-          placeholder: "Buscar produto...",
-        }}
+
         selectionMode="multiple"
+
         showCheckBoxesMode="normal"
-        selectNodesRecursive={false}
-        expandNodesRecursive={true}
-        onSelectionChanged={handleSelectionChanged}
+
+        selectByClick={true}
+
+        expandNodesRecursive={false}
+
+        onSelectionChanged={
+          handleSelectionChanged
+        }
       />
+
     </aside>
   );
 }

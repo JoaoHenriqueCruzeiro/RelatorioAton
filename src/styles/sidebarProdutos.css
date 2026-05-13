@@ -22,3 +22,13 @@
 
   margin: 0;
 }
+
+.sidebar-produtos {
+  width: 320px;
+
+  min-width: 320px;
+
+  padding: 16px;
+
+  overflow: auto;
+}
