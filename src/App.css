@@ -7,3 +7,22 @@
   flex-wrap: wrap;
   border: 1px solid red;
 }
+
+#meio{
+  border: 1px solid red;
+}
+
+.layout {
+  display: flex;
+
+  height: 100vh;
+
+  background: #030712;
+}
+
+.content {
+  flex: 1;
+
+
+  overflow: auto;
+}
