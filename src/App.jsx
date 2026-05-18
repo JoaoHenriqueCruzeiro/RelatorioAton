@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import DateComponent from "./components/databox";
+import DateComponent from "./components/dateComponent.jsx";
 import "./app.css";
 import Modal from "./components/modalTemas.jsx";
 import { trocaTema } from "./utils/trocatema";
