@@ -12,10 +12,12 @@
     "start": "concurrently \"npm run dev\" \"npm run electron\""
   },
   "dependencies": {
+    "@adobe/react-spectrum": "^3.47.0",
     "chart.js": "^4.5.1",
     "devextreme": "25.2.7",
     "devextreme-react": "25.2.7",
     "lucide-react": "^1.16.0",
+    "mssql": "^12.5.4",
     "react": "^18.3.1",
     "react-aria-components": "^1.17.0",
     "react-chartjs-2": "^5.3.1",

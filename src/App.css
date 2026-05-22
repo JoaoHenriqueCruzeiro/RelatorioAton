@@ -1,28 +1,61 @@
+/* Configuração global para o fundo escuro consistente */
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  background: #030712;
+  color: white;
+  font-family: sans-serif;
+  min-height: 100vh;
+}
+
 #topo {
   display: flex;
   align-items: center;
   gap: 10px;
-
   padding: 20px;
   flex-wrap: wrap;
-  border: 1px solid red;
+  background: #fbfcff;
 }
 
-#meio{
-  border: 1px solid red;
-}
-
-.layout {
+/* Container Geral do Dashboard */
+#dashboard-container {
   display: flex;
-
-  height: 100vh;
-
-  background: #030712;
+  flex-direction: column;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 20px;
+  gap: 24px; /* Espaço entre o bloco de cima e o de baixo */
 }
 
-.content {
+/* Bloco de Cima (Sidebar + Gráfico lado a lado) */
+.bloco-superior {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  gap: 20px; /* Corrigido de 200px para 20px */
+  align-items: stretch; /* Faz a sidebar e o gráfico terem a mesma altura */
+}
+
+/* Área do Gráfico (Garante que ele ocupe o espaço restante do topo) */
+.content-grafico {
   flex: 1;
+  min-width: 0; /* CRUCIAL para o Chart.js não quebrar a largura do flexbox */
+  background: #111827;
+  padding: 16px;
+  border: 1px solid #374151;
+  border-radius: 8px;
+}
 
+/* Bloco de Baixo (Métricas + DataGrid de ponta a ponta) */
+.bloco-inferior {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
 
-  overflow: auto;
+/* Garante o comportamento fluido da tabela do Spectrum */
+.tabela-wrapper {
+  width: 100%;
 }

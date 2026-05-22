@@ -1,34 +1,22 @@
 .sidebar-produtos {
   width: 320px;
-  height: 100vh;
-
+  min-width: 320px;
   padding: 16px;
-
-  background: white;
-
-  border-right: 1px solid #374151;
-
   overflow-y: auto;
+  
+  /* Mantém uma borda sutil separando o conteúdo */
+  border-right: 1px solid var(--spectrum-alias-border-color-mid, #374151);
+  
+  /* Deixamos o background livre ou herdado para que o React Spectrum aplique a cor correta do tema (Light/Dark) */
 }
 
 .sidebar-header {
   margin-bottom: 16px;
 }
 
+/* O título agora vai se adaptar de acordo com a cor do texto padrão do tema do sistema */
 .sidebar-header h2 {
-  color: white;
-
   font-size: 20px;
-
   margin: 0;
-}
-
-.sidebar-produtos {
-  width: 320px;
-
-  min-width: 320px;
-
-  padding: 16px;
-
-  overflow: auto;
+  color: inherit; 
 }
