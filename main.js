@@ -1,12 +1,60 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain } = require("electron");
 
+const path = require("path");
+
+// ======================================
+// QUERY
+// ======================================
+const { buscarProdutos } = require("./src/backend/queries/produtosQuery");
+
+// ======================================
+// DEV OU BUILD
+// ======================================
+const isDev = !app.isPackaged;
+
+// ======================================
+// JANELA
+// ======================================
 function createWindow() {
   const win = new BrowserWindow({
-    width: 1000,
-    height: 700
+    width: 1400,
+    height: 900,
+
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+
+      contextIsolation: true,
+
+      nodeIntegration: false,
+    },
   });
 
-  win.loadURL('http://localhost:5173'); // Vite dev server
+  // ====================================
+  // DEV
+  // ====================================
+  if (isDev) {
+    win.loadURL("http://localhost:5173");
+  }
+
+  // ====================================
+  // BUILD
+  // ====================================
+  else {
+    win.loadFile(path.join(__dirname, "dist/index.html"));
+  }
+
 }
 
-app.whenReady().then(createWindow);
+// ======================================
+// IPC
+// ======================================
+ipcMain.handle("buscar-produtos", async () => {
+  return await buscarProdutos();
+});
+
+// ======================================
+// READY
+// ======================================
+app.whenReady().then(() => {
+  createWindow();
+});

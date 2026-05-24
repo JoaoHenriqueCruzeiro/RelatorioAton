@@ -1,14 +1,24 @@
-import React, { useMemo } from "react";
-import { TreeView, TreeViewItem, TreeViewItemContent } from "@adobe/react-spectrum"; 
+import React, { useMemo, useState } from "react";
+import {
+  TreeView,
+  TreeViewItem,
+  TreeViewItemContent,
+} from "@adobe/react-spectrum";
+
 import "../styles/sidebarProdutos.css";
 
-// Monta a estrutura de árvore (Pronto para API)
+// ========================================
+// MONTA ÁRVORE
+// ========================================
 function formatarDadosParaArvore(lista) {
   const map = {};
   const raizes = [];
 
   lista.forEach((item) => {
-    map[item.id] = { ...item, childItems: [] };
+    map[item.id] = {
+      ...item,
+      childItems: [],
+    };
   });
 
   lista.forEach((item) => {
@@ -22,70 +32,177 @@ function formatarDadosParaArvore(lista) {
     }
   });
 
-  return { raizes, mapaCompleto: map };
+  return {
+    raizes,
+    mapaCompleto: map,
+  };
+}
+
+// ========================================
+// PEGA TODOS FILHOS RECURSIVOS
+// ========================================
+function pegarTodosFilhos(item) {
+  let filhos = [];
+
+  if (item.childItems?.length) {
+    item.childItems.forEach((filho) => {
+      filhos.push(filho);
+      filhos.push(...pegarTodosFilhos(filho));
+    });
+  }
+
+  return filhos;
 }
 
 export default function SidebarProdutos({ produtos = [], onSelectionChange }) {
-  
+  const [selectedKeys, setSelectedKeys] = useState(new Set());
+
   const { produtosEmArvore, produtosMap, chavesExpandidasId } = useMemo(() => {
     const { raizes, mapaCompleto } = formatarDadosParaArvore(produtos);
-    
+
     const idsExpandidos = Object.values(mapaCompleto)
-      .filter(p => p.isPaiReal)
-      .map(p => String(p.id));
+      .filter((p) => p.isPaiReal)
+      .map((p) => String(p.id));
 
     return {
       produtosEmArvore: raizes,
       produtosMap: mapaCompleto,
-      chavesExpandidasId: idsExpandidos
+      chavesExpandidasId: idsExpandidos,
     };
   }, [produtos]);
 
+  // ========================================
+  // CONTROLE DE SELEÇÃO
+  // ========================================
   function handleSelectionChange(keys) {
-    if (keys === "all") {
-      onSelectionChange?.(produtos.filter((p) => !produtosMap[p.id]?.isPaiReal));
-      return;
+    if (keys === "all") return;
+
+    const novoSet = new Set([...keys].map(String));
+    const atualSet = new Set([...selectedKeys]);
+
+    // ====================================
+    // DESCOBRE O ITEM ALTERADO
+    // ====================================
+    let itemAlterado = null;
+    let foiSelecionado = false;
+
+    // item adicionado
+    for (const key of novoSet) {
+      if (!atualSet.has(key)) {
+        itemAlterado = key;
+        foiSelecionado = true;
+        break;
+      }
     }
 
-    const produtosSelecionados = [];
-
-    keys.forEach((keyStr) => {
-      const itemOriginal = produtosMap[keyStr];
-      if (itemOriginal) {
-        if (itemOriginal.isPaiReal) {
-          const filhos = produtos.filter((p) => String(p.parentId) === keyStr);
-          produtosSelecionados.push(...filhos);
-        } else {
-          produtosSelecionados.push(itemOriginal);
+    // item removido
+    if (!itemAlterado) {
+      for (const key of atualSet) {
+        if (!novoSet.has(key)) {
+          itemAlterado = key;
+          foiSelecionado = false;
+          break;
         }
+      }
+    }
+
+    const resultado = new Set(novoSet);
+
+    // ====================================
+    // ITEM SELECIONADO
+    // ====================================
+    if (itemAlterado && foiSelecionado) {
+      const item = produtosMap[itemAlterado];
+
+      // seleciona todos filhos
+      if (item?.childItems?.length) {
+        const filhos = pegarTodosFilhos(item);
+
+        filhos.forEach((filho) => {
+          resultado.add(String(filho.id));
+        });
+      }
+    }
+
+    // ====================================
+    // ITEM REMOVIDO
+    // ====================================
+    if (itemAlterado && !foiSelecionado) {
+      const item = produtosMap[itemAlterado];
+
+      // remove todos filhos
+      if (item?.childItems?.length) {
+        const filhos = pegarTodosFilhos(item);
+
+        filhos.forEach((filho) => {
+          resultado.delete(String(filho.id));
+        });
+      }
+
+      // remove pais acima
+      Object.values(produtosMap).forEach((pai) => {
+        if (!pai.isPaiReal) return;
+
+        const filhos = pegarTodosFilhos(pai);
+
+        const todosSelecionados = filhos.every((filho) =>
+          resultado.has(String(filho.id)),
+        );
+
+        if (!todosSelecionados) {
+          resultado.delete(String(pai.id));
+        }
+      });
+    }
+
+    // ====================================
+    // AUTO-SELECIONA PAIS
+    // ====================================
+    Object.values(produtosMap).forEach((pai) => {
+      if (!pai.isPaiReal) return;
+
+      const filhos = pegarTodosFilhos(pai);
+
+      const todosSelecionados = filhos.every((filho) =>
+        resultado.has(String(filho.id)),
+      );
+
+      if (todosSelecionados) {
+        resultado.add(String(pai.id));
       }
     });
 
-    const produtosUnicos = [
-      ...new Map(produtosSelecionados.map((p) => [p.id, p])).values(),
-    ];
+    setSelectedKeys(resultado);
 
-    onSelectionChange?.(produtosUnicos);
+    // ====================================
+    // RETORNA APENAS FOLHAS
+    // ====================================
+    const produtosSelecionados = [];
+
+    resultado.forEach((key) => {
+      const item = produtosMap[key];
+
+      if (item && !item.isPaiReal) {
+        produtosSelecionados.push(item);
+      }
+    });
+
+    onSelectionChange?.(produtosSelecionados);
   }
 
-  /* 
-    FUNÇÃO RECURSIVA DE RENDERIZAÇÃO:
-    Garante que o Spectrum monte os filhos de forma estrita e visível,
-    não importa quantos níveis a API traga no futuro.
-  */
+  // ========================================
+  // RENDER RECURSIVO
+  // ========================================
   const renderizarNosDaArvore = (itens) => {
     return itens.map((item) => (
-      <TreeViewItem 
-        key={String(item.id)} 
-        id={String(item.id)} 
+      <TreeViewItem
+        key={String(item.id)}
+        id={String(item.id)}
         textValue={item.nome}
       >
-        <TreeViewItemContent>
-          {item.nome}
-        </TreeViewItemContent>
-        
-        {/* Se o item atual contiver filhos, renderiza-os dentro dele seguindo a regra do Spectrum */}
-        {item.childItems && item.childItems.length > 0 && renderizarNosDaArvore(item.childItems)}
+        <TreeViewItemContent>{item.nome}</TreeViewItemContent>
+
+        {item.childItems?.length > 0 && renderizarNosDaArvore(item.childItems)}
       </TreeViewItem>
     ));
   };
@@ -96,13 +213,10 @@ export default function SidebarProdutos({ produtos = [], onSelectionChange }) {
         <h2>Produtos</h2>
       </div>
 
-      {/* 
-        Passando a renderização estática/recursiva direta dentro do TreeView,
-        o Spectrum não se perde com o mapeamento dinâmico implícito.
-      */}
       <TreeView
         aria-label="Árvore de Produtos"
         selectionMode="multiple"
+        selectedKeys={selectedKeys}
         onSelectionChange={handleSelectionChange}
         defaultExpandedKeys={chavesExpandidasId}
       >
