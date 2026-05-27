@@ -27,6 +27,11 @@ import GraficoVendas from "./components/GraficoVendas";
 import { trocaTema } from "./utils/trocatema";
 
 // ======================================================
+// TESTE WINDOW.API
+// ======================================================
+console.log("WINDOW API:", window.api);
+
+// ======================================================
 // TEMAS
 // ======================================================
 const availableThemes = {
@@ -45,105 +50,149 @@ export default function App() {
 
   const [brandColor, setBrandColor] = useState("#7c3aed");
 
-  // Produtos árvore
   const [produtos, setProdutos] = useState([]);
 
-  // Produtos selecionados
   const [selectedProducts, setSelectedProducts] = useState([]);
 
-  // Dados tabela
   const [dadosTabela, setDadosTabela] = useState([]);
 
-  // Loading
+  const [dadosGrafico, setDadosGrafico] = useState([]);
+
   const [loadingProdutos, setLoadingProdutos] = useState(true);
 
   const [loadingTabela, setLoadingTabela] = useState(false);
 
-  // Datas
   const [dataInicial, setDataInicial] = useState(new Date());
 
   const [dataFinal, setDataFinal] = useState(new Date());
 
   // ======================================================
-  // TROCA TEMA
+  // TEMA
   // ======================================================
   useEffect(() => {
     trocaTema(theme);
   }, [theme]);
 
   // ======================================================
-  // CARREGA PRODUTOS
+  // TESTE IPC
   // ======================================================
   useEffect(() => {
-    async function carregarProdutos() {
+    async function testeIPC() {
       try {
-        setLoadingProdutos(true);
+        console.log("Tentando acessar window.api...");
 
-        // ==========================================
-        // ELECTRON IPC
-        // ==========================================
-        const response = await BuscarProdutos();
-
-        setProdutos(response);
-      } catch (error) {
-        console.error("Erro ao carregar produtos:", error);
-      } finally {
-        setLoadingProdutos(false);
-      }
-    }
-
-    carregarProdutos();
-  }, []);
-
-  // ======================================================
-  // CARREGA TABELA
-  // ======================================================
-  useEffect(() => {
-    async function carregarTabela() {
-      try {
-        // sem seleção
-        if (!selectedProducts.length) {
-          setDadosTabela([]);
+        if (!window.api) {
+          console.error("window.api está undefined");
           return;
         }
 
-        setLoadingTabela(true);
+        console.log("window.api carregou!");
 
-        // ids produtos
-        const produtosIds = selectedProducts.map((p) => p.id);
+        const teste = await window.api.buscarProdutosPais();
 
-        // ==========================================
-        // CONSULTA SQL VIA IPC
-        // ==========================================
-        const response = await window.api.buscarVendas({
-          produtosIds,
-
-          dataInicial,
-
-          dataFinal,
-        });
-
-        setDadosTabela(response);
+        console.log("Resposta IPC:", teste);
       } catch (error) {
-        console.error("Erro ao carregar vendas:", error);
-      } finally {
-        setLoadingTabela(false);
+        console.error("Erro IPC:", error);
       }
     }
 
-    carregarTabela();
-  }, [selectedProducts, dataInicial, dataFinal]);
+    testeIPC();
+  }, []);
+
+  // ======================================================
+  // CARREGA PRODUTOS
+  // ======================================================
+useEffect(() => {
+  async function carregarProdutos() {
+    try {
+      console.log("WINDOW API:", window.api);
+
+      setLoadingProdutos(true);
+
+      if (!window.api) {
+        console.error("window.api undefined");
+
+        return;
+      }
+
+      console.log("Tentando buscar produtos...");
+
+      const response = await window.api.buscarProdutosPais();
+
+      console.log("RESPOSTA IPC:", response);
+
+      setProdutos(response);
+    } catch (error) {
+      console.error("ERRO AO CARREGAR PRODUTOS:");
+
+      console.error(error);
+    } finally {
+      setLoadingProdutos(false);
+    }
+  }
+
+  carregarProdutos();
+}, []);
+
+  // ======================================================
+  // CONSULTAR VENDAS
+  // ======================================================
+  async function consultarVendas() {
+    try {
+      if (!selectedProducts.length) {
+        alert("Selecione ao menos um produto");
+
+        return;
+      }
+
+      setLoadingTabela(true);
+
+      const produtosIds = selectedProducts.map((p) => p.codid);
+
+      // ==================================
+      // TABELA
+      // ==================================
+      const tabela = await window.api.buscarVendas({
+        produtosIds,
+
+        dataInicial,
+
+        dataFinal,
+      });
+
+      setDadosTabela(tabela);
+
+      // ==================================
+      // GRÁFICO
+      // ==================================
+      const grafico = await window.api.buscarGraficoVendas({
+        produtosIds,
+
+        dataInicial,
+
+        dataFinal,
+      });
+
+      setDadosGrafico(grafico);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoadingTabela(false);
+    }
+  }
 
   // ======================================================
   // MÉTRICAS
   // ======================================================
   const faturamentoTotal = dadosTabela.reduce(
     (acc, item) => acc + Number(item.faturamento || 0),
+
     0,
   );
 
   const quantidadeTotal = dadosTabela.reduce(
     (acc, item) => acc + Number(item.qtd || 0),
+
     0,
   );
 
@@ -155,7 +204,7 @@ export default function App() {
       : null;
 
   // ======================================================
-  // TEMA SPECTRUM
+  // SPECTRUM
   // ======================================================
   const spectrumColorScheme = theme.includes("dark") ? "dark" : "light";
 
@@ -172,6 +221,12 @@ export default function App() {
         <DateComponent value={dataInicial} onChange={setDataInicial} />
         até
         <DateComponent value={dataFinal} onChange={setDataFinal} />
+        {/* =========================================== */}
+        {/* BOTÃO CONSULTAR */}
+        {/* =========================================== */}
+        <button className="consultar-button" onClick={consultarVendas}>
+          Consultar Vendas
+        </button>
         <button
           className="theme-button"
           style={{
@@ -204,6 +259,7 @@ export default function App() {
           ) : (
             <SidebarProdutos
               produtos={produtos}
+              setProdutos={setProdutos}
               onSelectionChange={setSelectedProducts}
             />
           )}
@@ -214,7 +270,7 @@ export default function App() {
           <main className="content-grafico">
             <GraficoVendas
               produtosSelecionados={selectedProducts}
-              dados={dadosTabela}
+              dados={dadosGrafico}
             />
           </main>
         </div>
@@ -303,7 +359,6 @@ export default function App() {
               </TableHeader>
 
               <TableBody>
-                {/* LOADING */}
                 {loadingTabela ? (
                   <Row>
                     <Cell>Carregando...</Cell>
@@ -313,9 +368,6 @@ export default function App() {
                     <Cell></Cell>
                   </Row>
                 ) : dadosTabela.length > 0 ? (
-                  // ===================================
-                  // DADOS
-                  // ===================================
                   dadosTabela.map((item) => (
                     <Row key={item.id}>
                       <Cell>{item.nome}</Cell>
@@ -332,11 +384,8 @@ export default function App() {
                     </Row>
                   ))
                 ) : (
-                  // ===================================
-                  // SEM DADOS
-                  // ===================================
                   <Row>
-                    <Cell>Nenhum produto selecionado</Cell>
+                    <Cell>Nenhum dado encontrado</Cell>
 
                     <Cell></Cell>
 

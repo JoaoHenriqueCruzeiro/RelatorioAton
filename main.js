@@ -1,20 +1,12 @@
-const { app, BrowserWindow, ipcMain } = require("electron");
-
 const path = require("path");
 
-// ======================================
-// QUERY
-// ======================================
-const { buscarProdutos } = require("./src/backend/queries/produtosQuery");
+const { app, BrowserWindow, ipcMain } = require("electron");
 
-// ======================================
-// DEV OU BUILD
-// ======================================
-const isDev = !app.isPackaged;
+const {
+  buscarProdutosPais,
+  buscarFilhos,
+} = require("./src/backend/queries/produtosQuery");
 
-// ======================================
-// JANELA
-// ======================================
 function createWindow() {
   const win = new BrowserWindow({
     width: 1400,
@@ -26,35 +18,33 @@ function createWindow() {
       contextIsolation: true,
 
       nodeIntegration: false,
+
+      sandbox: false,
     },
   });
 
-  // ====================================
-  // DEV
-  // ====================================
-  if (isDev) {
-    win.loadURL("http://localhost:5173");
-  }
-
-  // ====================================
-  // BUILD
-  // ====================================
-  else {
-    win.loadFile(path.join(__dirname, "dist/index.html"));
-  }
-
+  // ✅ CORRETO
+  win.loadURL("http://localhost:5173");
 }
 
-// ======================================
+// =====================================
 // IPC
-// ======================================
-ipcMain.handle("buscar-produtos", async () => {
-  return await buscarProdutos();
-});
+// =====================================
 
-// ======================================
-// READY
-// ======================================
-app.whenReady().then(() => {
-  createWindow();
-});
+ipcMain.handle(
+  "buscar-produtos-pais",
+
+  async () => {
+    return await buscarProdutosPais();
+  },
+);
+
+ipcMain.handle(
+  "buscar-filhos",
+
+  async (_, paiId) => {
+    return await buscarFilhos(paiId);
+  },
+);
+
+app.whenReady().then(createWindow);

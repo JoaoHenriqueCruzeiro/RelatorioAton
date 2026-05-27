@@ -31,10 +31,21 @@ body,
 /* Bloco de Cima (Sidebar + Gráfico lado a lado) */
 .bloco-superior {
   display: flex;
+
   flex-direction: row;
+
   width: 100%;
-  gap: 20px; /* Corrigido de 200px para 20px */
-  align-items: stretch; /* Faz a sidebar e o gráfico terem a mesma altura */
+
+  gap: 20px;
+
+  align-items: flex-start;
+
+  min-height: 0;
+
+  display: flex;
+  align-items: stretch;
+  height: 100vh;
+  overflow: hidden;
 }
 
 /* Área do Gráfico (Garante que ele ocupe o espaço restante do topo) */

@@ -1,227 +1,292 @@
-import React, { useMemo, useState } from "react";
+import React, {
+  useMemo,
+  useState,
+} from "react";
+
 import {
-  TreeView,
-  TreeViewItem,
-  TreeViewItemContent,
-} from "@adobe/react-spectrum";
+  SimpleTreeView,
+  TreeItem,
+} from "@mui/x-tree-view";
+
+import {
+  Box,
+  Typography,
+} from "@mui/material";
+
+import FolderIcon from "@mui/icons-material/Folder";
+import FolderOpenIcon from "@mui/icons-material/FolderOpen";
+import Inventory2Icon from "@mui/icons-material/Inventory2";
 
 import "../styles/sidebarProdutos.css";
 
 // ========================================
 // MONTA ÁRVORE
 // ========================================
-function formatarDadosParaArvore(lista) {
+function formatarDados(lista) {
+
   const map = {};
   const raizes = [];
 
   lista.forEach((item) => {
+
     map[item.id] = {
       ...item,
-      childItems: [],
+      children: [],
     };
   });
 
   lista.forEach((item) => {
-    if (item.parentId) {
-      if (map[item.parentId]) {
-        map[item.parentId].childItems.push(map[item.id]);
-        map[item.parentId].isPaiReal = true;
-      }
+
+    if (
+      item.parentId &&
+      map[item.parentId]
+    ) {
+
+      map[item.parentId]
+        .children
+        .push(map[item.id]);
+
     } else {
+
       raizes.push(map[item.id]);
     }
   });
 
-  return {
-    raizes,
-    mapaCompleto: map,
-  };
+  return raizes;
 }
 
-// ========================================
-// PEGA TODOS FILHOS RECURSIVOS
-// ========================================
-function pegarTodosFilhos(item) {
-  let filhos = [];
+export default function SidebarProdutos({
 
-  if (item.childItems?.length) {
-    item.childItems.forEach((filho) => {
-      filhos.push(filho);
-      filhos.push(...pegarTodosFilhos(filho));
-    });
-  }
+  produtos = [],
 
-  return filhos;
-}
+  setProdutos,
 
-export default function SidebarProdutos({ produtos = [], onSelectionChange }) {
-  const [selectedKeys, setSelectedKeys] = useState(new Set());
+  onSelectionChange,
 
-  const { produtosEmArvore, produtosMap, chavesExpandidasId } = useMemo(() => {
-    const { raizes, mapaCompleto } = formatarDadosParaArvore(produtos);
+}) {
 
-    const idsExpandidos = Object.values(mapaCompleto)
-      .filter((p) => p.isPaiReal)
-      .map((p) => String(p.id));
+  const [expanded,
+    setExpanded] =
+    useState([]);
 
-    return {
-      produtosEmArvore: raizes,
-      produtosMap: mapaCompleto,
-      chavesExpandidasId: idsExpandidos,
-    };
-  }, [produtos]);
+  const [selected,
+    setSelected] =
+    useState([]);
 
-  // ========================================
-  // CONTROLE DE SELEÇÃO
-  // ========================================
-  function handleSelectionChange(keys) {
-    if (keys === "all") return;
+  const produtosEmArvore =
+    useMemo(() => {
 
-    const novoSet = new Set([...keys].map(String));
-    const atualSet = new Set([...selectedKeys]);
-
-    // ====================================
-    // DESCOBRE O ITEM ALTERADO
-    // ====================================
-    let itemAlterado = null;
-    let foiSelecionado = false;
-
-    // item adicionado
-    for (const key of novoSet) {
-      if (!atualSet.has(key)) {
-        itemAlterado = key;
-        foiSelecionado = true;
-        break;
-      }
-    }
-
-    // item removido
-    if (!itemAlterado) {
-      for (const key of atualSet) {
-        if (!novoSet.has(key)) {
-          itemAlterado = key;
-          foiSelecionado = false;
-          break;
-        }
-      }
-    }
-
-    const resultado = new Set(novoSet);
-
-    // ====================================
-    // ITEM SELECIONADO
-    // ====================================
-    if (itemAlterado && foiSelecionado) {
-      const item = produtosMap[itemAlterado];
-
-      // seleciona todos filhos
-      if (item?.childItems?.length) {
-        const filhos = pegarTodosFilhos(item);
-
-        filhos.forEach((filho) => {
-          resultado.add(String(filho.id));
-        });
-      }
-    }
-
-    // ====================================
-    // ITEM REMOVIDO
-    // ====================================
-    if (itemAlterado && !foiSelecionado) {
-      const item = produtosMap[itemAlterado];
-
-      // remove todos filhos
-      if (item?.childItems?.length) {
-        const filhos = pegarTodosFilhos(item);
-
-        filhos.forEach((filho) => {
-          resultado.delete(String(filho.id));
-        });
-      }
-
-      // remove pais acima
-      Object.values(produtosMap).forEach((pai) => {
-        if (!pai.isPaiReal) return;
-
-        const filhos = pegarTodosFilhos(pai);
-
-        const todosSelecionados = filhos.every((filho) =>
-          resultado.has(String(filho.id)),
-        );
-
-        if (!todosSelecionados) {
-          resultado.delete(String(pai.id));
-        }
-      });
-    }
-
-    // ====================================
-    // AUTO-SELECIONA PAIS
-    // ====================================
-    Object.values(produtosMap).forEach((pai) => {
-      if (!pai.isPaiReal) return;
-
-      const filhos = pegarTodosFilhos(pai);
-
-      const todosSelecionados = filhos.every((filho) =>
-        resultado.has(String(filho.id)),
+      return formatarDados(
+        produtos
       );
 
-      if (todosSelecionados) {
-        resultado.add(String(pai.id));
+    }, [produtos]);
+
+  // ========================================
+  // EXPANDIR
+  // ========================================
+  async function handleExpanded(
+    event,
+    itemIds
+  ) {
+
+    const novos =
+      itemIds.filter(
+        (id) =>
+          !expanded.includes(id)
+      );
+
+    for (const paiId of novos) {
+
+      const pai =
+        produtos.find(
+          (p) =>
+            String(p.id) ===
+            String(paiId)
+        );
+
+      const jaTemFilhos =
+        produtos.some(
+          (p) =>
+            String(
+              p.parentId
+            ) ===
+            String(paiId)
+        );
+
+      if (
+        pai?.hasChildren &&
+        !jaTemFilhos
+      ) {
+
+        const filhos =
+          await window.api.buscarFilhos(
+            Number(paiId)
+          );
+
+        setProdutos((prev) => {
+
+          const ids =
+            new Set(
+              prev.map(
+                (p) => p.id
+              )
+            );
+
+          const novosFilhos =
+            filhos.filter(
+              (f) =>
+                !ids.has(f.id)
+            );
+
+          return [
+
+            ...prev,
+
+            ...novosFilhos,
+
+          ];
+        });
       }
-    });
+    }
 
-    setSelectedKeys(resultado);
-
-    // ====================================
-    // RETORNA APENAS FOLHAS
-    // ====================================
-    const produtosSelecionados = [];
-
-    resultado.forEach((key) => {
-      const item = produtosMap[key];
-
-      if (item && !item.isPaiReal) {
-        produtosSelecionados.push(item);
-      }
-    });
-
-    onSelectionChange?.(produtosSelecionados);
+    setExpanded(itemIds);
   }
 
   // ========================================
-  // RENDER RECURSIVO
+  // SELEÇÃO
   // ========================================
-  const renderizarNosDaArvore = (itens) => {
-    return itens.map((item) => (
-      <TreeViewItem
-        key={String(item.id)}
-        id={String(item.id)}
-        textValue={item.nome}
-      >
-        <TreeViewItemContent>{item.nome}</TreeViewItemContent>
+  function handleSelected(
+    event,
+    itemIds
+  ) {
 
-        {item.childItems?.length > 0 && renderizarNosDaArvore(item.childItems)}
-      </TreeViewItem>
-    ));
-  };
+    const ids =
+      Array.isArray(itemIds)
+        ? itemIds
+        : [itemIds];
+
+    setSelected(ids);
+
+    const selecionados =
+      produtos.filter((p) =>
+        ids.includes(
+          String(p.id)
+        )
+      );
+
+    onSelectionChange?.(
+      selecionados
+    );
+  }
+
+  // ========================================
+  // RENDER ITEM
+  // ========================================
+  function renderTree(items = []) {
+
+    return items.map((item) => {
+
+      const possuiFilhos =
+        item.hasChildren ||
+        item.children?.length > 0;
+
+      return (
+
+        <TreeItem
+          key={item.id}
+          itemId={String(item.id)}
+
+          label={
+
+            <Box
+              className="tree-item-content"
+            >
+
+              {
+
+                possuiFilhos
+                  ? expanded.includes(
+                      String(item.id)
+                    )
+
+                    ? (
+                      <FolderOpenIcon
+                        fontSize="small"
+                        className="tree-icon"
+                      />
+                    )
+
+                    : (
+                      <FolderIcon
+                        fontSize="small"
+                        className="tree-icon"
+                      />
+                    )
+
+                  : (
+                    <Inventory2Icon
+                      fontSize="small"
+                      className="tree-icon"
+                    />
+                  )
+              }
+
+              <Typography
+                className="tree-label"
+              >
+                {item.nome}
+              </Typography>
+
+            </Box>
+          }
+        >
+
+          {
+            item.children?.length > 0 &&
+            renderTree(item.children)
+          }
+
+        </TreeItem>
+      );
+    });
+  }
 
   return (
+
     <aside className="sidebar-produtos">
+
       <div className="sidebar-header">
         <h2>Produtos</h2>
       </div>
 
-      <TreeView
-        aria-label="Árvore de Produtos"
-        selectionMode="multiple"
-        selectedKeys={selectedKeys}
-        onSelectionChange={handleSelectionChange}
-        defaultExpandedKeys={chavesExpandidasId}
-      >
-        {renderizarNosDaArvore(produtosEmArvore)}
-      </TreeView>
+      <div className="tree-container">
+
+        <SimpleTreeView
+
+          multiSelect
+
+          expandedItems={expanded}
+
+          selectedItems={selected}
+
+          onExpandedItemsChange={
+            handleExpanded
+          }
+
+          onSelectedItemsChange={
+            handleSelected
+          }
+        >
+
+          {renderTree(
+            produtosEmArvore
+          )}
+
+        </SimpleTreeView>
+
+      </div>
+
     </aside>
   );
 }
