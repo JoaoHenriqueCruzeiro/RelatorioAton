@@ -31,13 +31,9 @@ function createWindow() {
 // IPC
 // =====================================
 
-ipcMain.handle(
-  "buscar-produtos-pais",
-
-  async () => {
-    return await buscarProdutosPais();
-  },
-);
+ipcMain.handle("buscar-produtos-pais", async (event, filtros) => {
+  return await buscarProdutosPais(filtros);
+});
 
 ipcMain.handle(
   "buscar-filhos",
@@ -46,5 +42,17 @@ ipcMain.handle(
     return await buscarFilhos(paiId);
   },
 );
+
+ipcMain.handle("buscar-fabricantes", async () => {
+  return await buscarFabricantes();
+});
+
+ipcMain.handle("buscar-grupos", async () => {
+  return await buscarGrupos();
+});
+
+ipcMain.handle("buscar-subgrupos", async () => {
+  return await buscarSubgrupos();
+});
 
 app.whenReady().then(createWindow);

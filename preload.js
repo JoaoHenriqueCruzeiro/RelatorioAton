@@ -11,4 +11,10 @@ contextBridge.exposeInMainWorld("api", {
 
   buscarGraficoVendas: (dados) =>
     ipcRenderer.invoke("buscar-grafico-vendas", dados),
+
+  buscarFabricantes: () => ipcRenderer.invoke("buscar-fabricantes"),
+
+  buscarGrupos: () => ipcRenderer.invoke("buscar-grupos"),
+
+  buscarSubgrupos: () => ipcRenderer.invoke("buscar-subgrupos"),
 });

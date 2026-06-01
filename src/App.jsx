@@ -23,7 +23,7 @@ import DateComponent from "./components/dateComponent.jsx";
 import Modal from "./components/modalTemas.jsx";
 import SidebarProdutos from "./components/sidebarProdutos.jsx";
 import GraficoVendas from "./components/GraficoVendas";
-
+import ModalFiltros from "./components/modalFiltros";
 import { trocaTema } from "./utils/trocatema";
 
 // ======================================================
@@ -46,6 +46,8 @@ export default function App() {
   // ======================================================
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+
   const [theme, setTheme] = useState(availableThemes.light);
 
   const [brandColor, setBrandColor] = useState("#7c3aed");
@@ -65,6 +67,16 @@ export default function App() {
   const [dataInicial, setDataInicial] = useState(new Date());
 
   const [dataFinal, setDataFinal] = useState(new Date());
+
+  const [isFiltroOpen, setIsFiltroOpen] = useState(false);
+
+  const [filtros, setFiltros] = useState({
+    fabricantes: [],
+
+    grupos: [],
+
+    subgrupos: [],
+  });
 
   // ======================================================
   // TEMA
@@ -102,37 +114,37 @@ export default function App() {
   // ======================================================
   // CARREGA PRODUTOS
   // ======================================================
-useEffect(() => {
-  async function carregarProdutos() {
-    try {
-      console.log("WINDOW API:", window.api);
+  useEffect(() => {
+    async function carregarProdutos() {
+      try {
+        console.log("WINDOW API:", window.api);
 
-      setLoadingProdutos(true);
+        setLoadingProdutos(true);
 
-      if (!window.api) {
-        console.error("window.api undefined");
+        if (!window.api) {
+          console.error("window.api undefined");
 
-        return;
+          return;
+        }
+
+        console.log("Tentando buscar produtos...");
+
+        const response = await window.api.buscarProdutosPais(filtros);
+
+        console.log("RESPOSTA IPC:", response);
+
+        setProdutos(response);
+      } catch (error) {
+        console.error("ERRO AO CARREGAR PRODUTOS:");
+
+        console.error(error);
+      } finally {
+        setLoadingProdutos(false);
       }
-
-      console.log("Tentando buscar produtos...");
-
-      const response = await window.api.buscarProdutosPais();
-
-      console.log("RESPOSTA IPC:", response);
-
-      setProdutos(response);
-    } catch (error) {
-      console.error("ERRO AO CARREGAR PRODUTOS:");
-
-      console.error(error);
-    } finally {
-      setLoadingProdutos(false);
     }
-  }
 
-  carregarProdutos();
-}, []);
+    carregarProdutos();
+  }, []);
 
   // ======================================================
   // CONSULTAR VENDAS
@@ -235,6 +247,12 @@ useEffect(() => {
           onClick={() => setIsModalOpen(true)}
         >
           Temas
+        </button>
+        <button
+          className="filter-button"
+          onClick={() => setIsFilterModalOpen(true)}
+        >
+          Filtros
         </button>
       </section>
 
@@ -408,6 +426,13 @@ useEffect(() => {
         selectedColor={brandColor}
         onChangeTheme={setTheme}
         onChangeColor={setBrandColor}
+      />
+
+      <ModalFiltros
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        filtros={filtros}
+        setFiltros={setFiltros}
       />
     </Provider>
   );
