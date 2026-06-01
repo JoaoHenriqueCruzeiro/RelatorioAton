@@ -7,6 +7,18 @@ async function buscarProdutosPais(filtros = {}) {
   try {
     const pool = await poolPromise;
 
+    const fabricanteFiltro = filtros.fabricantes?.length
+      ? `AND A.fabricante IN (${filtros.fabricantes.join(",")})`
+      : "";
+
+    const grupoFiltro = filtros.grupos?.length
+      ? `AND A.grupo IN (${filtros.grupos.join(",")})`
+      : "";
+
+    const subgrupoFiltro = filtros.subgrupos?.length
+      ? `AND A.subgrupo IN (${filtros.subgrupos.join(",")})`
+      : "";
+
     let query = `
       SELECT
 
@@ -30,9 +42,12 @@ async function buscarProdutosPais(filtros = {}) {
 
       FROM materiais A
 
-      WHERE
-        A.pai = 0
-        AND A.inativo = 'N'
+      WHERE A.pai = 0
+      AND A.inativo = 'N'
+
+      ${fabricanteFiltro}
+      ${grupoFiltro}
+      ${subgrupoFiltro}
     `;
 
     if (filtros.fabricantes?.length) {
@@ -128,13 +143,11 @@ async function buscarFabricantes() {
   const pool = await poolPromise;
 
   const result = await pool.request().query(`
-    SELECT DISTINCT
-      FABRICANTE
-    FROM materiais
-    WHERE
-      FABRICANTE IS NOT NULL
-      AND FABRICANTE <> ''
-    ORDER BY FABRICANTE
+    SELECT 
+      COD_FABRICANTE as 'id', 
+      FABRICANTE_DESCR AS 'nome' 
+    FROM FABRICANTE_MATERIAIS
+    order by nome
   `);
 
   return result.recordset;
@@ -144,13 +157,45 @@ async function buscarGrupos() {
   const pool = await poolPromise;
 
   const result = await pool.request().query(`
+    SELECT
+      CODIGO AS id,
+      descricao AS nome
+    FROM grupo
+    ORDER BY descricao
+  `);
+
+  return result.recordset;
+}
+
+async function buscarSubgrupos() {
+  const pool = await poolPromise;
+
+  const result = await pool.request().query(`
     SELECT DISTINCT
-      GRUPO
+      SUBGRUPO
     FROM materiais
     WHERE
-      GRUPO IS NOT NULL
-      AND GRUPO <> ''
-    ORDER BY GRUPO
+      SUBGRUPO IS NOT NULL
+      AND SUBGRUPO <> ''
+    ORDER BY SUBGRUPO
+  `);
+
+  return result.recordset;
+}
+
+async function buscarSubgruposPorGrupo(grupos) {
+  const pool = await poolPromise;
+
+  const lista = grupos.join(",");
+
+  const result = await pool.request().query(`
+    SELECT
+      codsubgrupo AS id,
+      descricao AS nome,
+      codgrupo
+    FROM subgrupos
+    WHERE codgrupo IN (${lista})
+    ORDER BY descricao
   `);
 
   return result.recordset;
@@ -158,6 +203,8 @@ async function buscarGrupos() {
 
 module.exports = {
   buscarProdutosPais,
-
   buscarFilhos,
+  buscarFabricantes,
+  buscarGrupos,
+  buscarSubgrupos,
 };

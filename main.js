@@ -5,6 +5,9 @@ const { app, BrowserWindow, ipcMain } = require("electron");
 const {
   buscarProdutosPais,
   buscarFilhos,
+  buscarFabricantes,
+  buscarGrupos,
+  buscarSubgrupos,
 } = require("./src/backend/queries/produtosQuery");
 
 function createWindow() {
