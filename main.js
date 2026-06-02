@@ -11,6 +11,10 @@ const {
   buscarSubgruposPorGrupo,
 } = require("./src/backend/queries/produtosQuery");
 
+const {
+  buscarGraficoVendas,
+} = require("./src/backend/queries/graficoQuery");
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1400,
@@ -63,5 +67,12 @@ ipcMain.handle("buscar-subgrupos", async () => {
 ipcMain.handle("buscar-subgrupos-por-grupo", async (_, grupos) => {
   return await buscarSubgruposPorGrupo(grupos);
 });
+
+ipcMain.handle(
+  "buscar-grafico-vendas",
+  async (_, dados) => {
+    return await buscarGraficoVendas(dados);
+  },
+);
 
 app.whenReady().then(createWindow);

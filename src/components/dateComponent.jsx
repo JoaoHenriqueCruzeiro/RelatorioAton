@@ -25,12 +25,13 @@ import {
 
 import "../styles/dateComponent.css";
 
-export default function DateComponent() {
+export default function DateComponent({ value, onChange }) {
   return (
     <DatePicker
+      value={value}
+      onChange={onChange}
       granularity="day"
       hideTimeZone
-      defaultValue={now(getLocalTimeZone())}
       className="date-picker"
     >
       <Group className="date-group">

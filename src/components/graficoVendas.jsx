@@ -34,6 +34,8 @@ export default function GraficoVendas({
 }) {
   const [chartType, setChartType] = useState("line");
 
+  const [metrica, setMetrica] = useState("quantidade");
+
   // ====================================================
   // CHART DATA
   // ====================================================
@@ -129,23 +131,31 @@ export default function GraficoVendas({
   return (
     <section className="grafico-card">
       <div className="grafico-header">
-        <div>
-          <h2>Vendas dos Produtos</h2>
+          <div className="grafico-actions">
+            <select
+              value={metrica}
+              onChange={(e) => setMetrica(e.target.value)}
+              className="chart-select"
+            >
+              <option value="quantidade">
+                Quantidade Vendida
+              </option>
 
-          <p>Dados consultados</p>
+              <option value="faturamento">
+                Faturamento
+              </option>
+            </select>
+
+            <select
+              value={chartType}
+              onChange={(e) => setChartType(e.target.value)}
+              className="chart-select"
+            >
+              <option value="line">Linha</option>
+              <option value="bar">Barra</option>
+              <option value="doughnut">Rosca</option>
+            </select>
         </div>
-
-        <select
-          value={chartType}
-          onChange={(e) => setChartType(e.target.value)}
-          className="chart-select"
-        >
-          <option value="line">Linha</option>
-
-          <option value="bar">Barra</option>
-
-          <option value="doughnut">Rosca</option>
-        </select>
       </div>
 
       <div className="grafico-container">

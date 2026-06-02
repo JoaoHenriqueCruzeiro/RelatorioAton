@@ -24,6 +24,7 @@ import Modal from "./components/modalTemas.jsx";
 import SidebarProdutos from "./components/sidebarProdutos.jsx";
 import GraficoVendas from "./components/GraficoVendas";
 import ModalFiltros from "./components/modalFiltros";
+import { today, getLocalTimeZone } from "@internationalized/date";
 import { trocaTema } from "./utils/trocatema";
 
 // ======================================================
@@ -64,11 +65,13 @@ export default function App() {
 
   const [loadingTabela, setLoadingTabela] = useState(false);
 
-  const [dataInicial, setDataInicial] = useState(new Date());
+  const [dataInicial, setDataInicial] = useState(today(getLocalTimeZone()));
 
-  const [dataFinal, setDataFinal] = useState(new Date());
+  const [dataFinal, setDataFinal] = useState(today(getLocalTimeZone()));
 
   const [isFiltroOpen, setIsFiltroOpen] = useState(false);
+
+  const [metricaGrafico, setMetricaGrafico] = useState("quantidade");
 
   const [filtros, setFiltros] = useState({
     fabricantes: [],
@@ -164,25 +167,28 @@ export default function App() {
       // ==================================
       // TABELA
       // ==================================
-      const tabela = await window.api.buscarVendas({
-        produtosIds,
+      // const tabela = await window.api.buscarVendas({
+      //   produtosIds,
 
-        dataInicial,
+      //   dataInicial,
 
-        dataFinal,
-      });
+      //   dataFinal,
+      // });
 
-      setDadosTabela(tabela);
+      // setDadosTabela(tabela);
 
       // ==================================
       // GRÁFICO
       // ==================================
+
+      const formatarData = (d) =>
+        `${d.year}-${String(d.month).padStart(2, "0")}-${String(d.day).padStart(2, "0")}`;
+      
       const grafico = await window.api.buscarGraficoVendas({
         produtosIds,
-
-        dataInicial,
-
-        dataFinal,
+        dataInicial: formatarData(dataInicial),
+        dataFinal: formatarData(dataFinal),
+        metrica: metricaGrafico,
       });
 
       setDadosGrafico(grafico);
@@ -306,6 +312,8 @@ export default function App() {
             <GraficoVendas
               produtosSelecionados={selectedProducts}
               dados={dadosGrafico}
+              metrica={metricaGrafico}
+              setMetrica={setMetricaGrafico}
             />
           </main>
         </div>

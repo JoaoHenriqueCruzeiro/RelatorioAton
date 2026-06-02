@@ -3,52 +3,76 @@ const db = require("../db");
 // ======================================
 // GRÁFICO VENDAS
 // ======================================
-async function buscarGraficoVendas(
+
+// ======================================
+// GRÁFICO VENDAS
+// ======================================
+async function buscarGraficoVendas({
   produtosIds = [],
-
   dataInicial,
-
   dataFinal,
-) {
+  metrica = "quantidade",
+}) {
   if (!produtosIds.length) {
     return [];
   }
 
-  const placeholders = produtosIds.map(() => "?").join(",");
+  
+
+  const placeholders =
+    produtosIds.map(() => "?").join(",");
+
+  const campoValor =
+    metrica === "faturamento"
+      ? "SUM(i.VLR_TOTAL)"
+      : "SUM(i.QUANT)";
 
   const [rows] = await db.query(
     `
     SELECT
 
       DATE_FORMAT(
-        data_venda,
+        p.DATA,
         '%m/%Y'
       ) AS mes,
 
-      SUM(valor_total) AS vendas
+      i.CODID,
 
-    FROM vendas
+      i.DESCRICAOPROD AS produto,
 
-    WHERE produto_id
-      IN (${placeholders})
+      ${campoValor} AS valor
 
-    AND data_venda
-      BETWEEN ? AND ?
+    FROM pedido_materiais_itens_cliente i
+
+    INNER JOIN pedido_materiais_cliente p
+      ON p.PEDIDO = i.PEDIDO
+
+    WHERE
+      i.CODID IN (${placeholders})
+
+      AND p.DATA BETWEEN ? AND ?
 
     GROUP BY
 
-      YEAR(data_venda),
+      YEAR(p.DATA),
 
-      MONTH(data_venda)
+      MONTH(p.DATA),
+
+      i.CODID,
+
+      i.DESCRICAOPROD
 
     ORDER BY
 
-      YEAR(data_venda),
+      YEAR(p.DATA),
 
-      MONTH(data_venda)
+      MONTH(p.DATA)
     `,
-
-    [...produtosIds, dataInicial, dataFinal],
+    [
+      ...produtosIds,
+      dataInicial,
+      dataFinal,
+    ],
   );
 
   return rows;

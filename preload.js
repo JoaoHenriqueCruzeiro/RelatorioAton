@@ -8,8 +8,6 @@ contextBridge.exposeInMainWorld("api", {
 
   buscarFilhos: (parentId) => ipcRenderer.invoke("buscar-filhos", parentId),
 
-  buscarVendas: (dados) => ipcRenderer.invoke("buscar-vendas", dados),
-
   buscarGraficoVendas: (dados) =>
     ipcRenderer.invoke("buscar-grafico-vendas", dados),
 
