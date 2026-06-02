@@ -220,6 +220,23 @@ export default function App() {
   // ======================================================
   const spectrumColorScheme = theme.includes("dark") ? "dark" : "light";
 
+  async function aplicarFiltros(novosFiltros) {
+    setFiltros(novosFiltros);
+
+    setLoadingProdutos(true);
+
+    try {
+      const produtosFiltrados =
+        await window.api.buscarProdutosPais(novosFiltros);
+
+      setProdutos(produtosFiltrados);
+    } finally {
+      setLoadingProdutos(false);
+    }
+
+    console.log("FILTROS ENVIADOS", novosFiltros);
+  }
+
   // ======================================================
   // RENDER
   // ======================================================
@@ -433,6 +450,7 @@ export default function App() {
         onClose={() => setIsFilterModalOpen(false)}
         filtros={filtros}
         setFiltros={setFiltros}
+        onSalvar={aplicarFiltros}
       />
     </Provider>
   );

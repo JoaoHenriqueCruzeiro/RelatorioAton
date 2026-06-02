@@ -8,6 +8,7 @@ const {
   buscarFabricantes,
   buscarGrupos,
   buscarSubgrupos,
+  buscarSubgruposPorGrupo,
 } = require("./src/backend/queries/produtosQuery");
 
 function createWindow() {
@@ -34,7 +35,8 @@ function createWindow() {
 // IPC
 // =====================================
 
-ipcMain.handle("buscar-produtos-pais", async (event, filtros) => {
+ipcMain.handle("buscar-produtos-pais", async (_, filtros) => {
+  console.log(filtros);
   return await buscarProdutosPais(filtros);
 });
 
@@ -56,6 +58,10 @@ ipcMain.handle("buscar-grupos", async () => {
 
 ipcMain.handle("buscar-subgrupos", async () => {
   return await buscarSubgrupos();
+});
+
+ipcMain.handle("buscar-subgrupos-por-grupo", async (_, grupos) => {
+  return await buscarSubgruposPorGrupo(grupos);
 });
 
 app.whenReady().then(createWindow);

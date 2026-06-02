@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 import "../styles/modalFiltros.css";
 
-export default function ModalFiltros({ isOpen, onClose, onSalvar }) {
+export default function ModalFiltros({ isOpen, onClose, onSalvar, filtros }) {
   const [loading, setLoading] = useState(true);
 
   const [fabricantes, setFabricantes] = useState([]);
@@ -13,20 +13,28 @@ export default function ModalFiltros({ isOpen, onClose, onSalvar }) {
   const [gruposSelecionados, setGruposSelecionados] = useState([]);
   const [subgruposSelecionados, setSubgruposSelecionados] = useState([]);
 
+  // ========================================
+  // CARREGA DADOS DO MODAL
+  // ========================================
   useEffect(() => {
     async function carregar() {
       try {
         setLoading(true);
 
-        const [fab, grp, sub] = await Promise.all([
+        const [fab, grp] = await Promise.all([
           window.api.buscarFabricantes(),
           window.api.buscarGrupos(),
-          window.api.buscarSubgrupos(),
         ]);
 
         setFabricantes(fab);
         setGrupos(grp);
-        setSubgrupos(sub);
+
+        // restaura filtros salvos
+        setFabricantesSelecionados(filtros?.fabricantes || []);
+
+        setGruposSelecionados(filtros?.grupos || []);
+
+        setSubgruposSelecionados(filtros?.subgrupos || []);
       } catch (err) {
         console.error(err);
       } finally {
@@ -45,6 +53,50 @@ export default function ModalFiltros({ isOpen, onClose, onSalvar }) {
     };
   }, [isOpen]);
 
+  // ========================================
+  // CARREGA SUBGRUPOS POR GRUPO
+  // ========================================
+  useEffect(() => {
+    let ativo = true;
+
+    async function carregarSubgrupos() {
+      try {
+        if (gruposSelecionados.length === 0) {
+          setSubgrupos([]);
+          setSubgruposSelecionados([]);
+
+          return;
+        }
+
+        const resultado =
+          await window.api.buscarSubgruposPorGrupo(gruposSelecionados);
+
+        if (!ativo) return;
+
+        setSubgrupos(resultado);
+
+        const idsValidos = resultado.map((x) => String(x.id));
+
+        setSubgruposSelecionados((prev) =>
+          prev.filter((id) => idsValidos.includes(id)),
+        );
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    if (isOpen) {
+      carregarSubgrupos();
+    }
+
+    return () => {
+      ativo = false;
+    };
+  }, [gruposSelecionados, isOpen]);
+
+  // ========================================
+  // TOGGLE CHECKBOX
+  // ========================================
   function toggleValue(valor, lista, setLista) {
     if (lista.includes(valor)) {
       setLista(lista.filter((x) => x !== valor));
@@ -53,6 +105,9 @@ export default function ModalFiltros({ isOpen, onClose, onSalvar }) {
     }
   }
 
+  // ========================================
+  // SALVAR
+  // ========================================
   function salvar() {
     onSalvar({
       fabricantes: fabricantesSelecionados,
@@ -68,6 +123,7 @@ export default function ModalFiltros({ isOpen, onClose, onSalvar }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-filtros" onClick={(e) => e.stopPropagation()}>
+        {/* HEADER */}
         <div className="modal-header">
           <h2>Filtros de Produtos</h2>
 
@@ -78,6 +134,7 @@ export default function ModalFiltros({ isOpen, onClose, onSalvar }) {
 
         <div className="divider" />
 
+        {/* CONTEÚDO */}
         {loading ? (
           <div className="loading-container">Carregando filtros...</div>
         ) : (
@@ -99,6 +156,7 @@ export default function ModalFiltros({ isOpen, onClose, onSalvar }) {
                       )
                     }
                   />
+
                   {item.nome}
                 </label>
               ))}
@@ -121,6 +179,7 @@ export default function ModalFiltros({ isOpen, onClose, onSalvar }) {
                       )
                     }
                   />
+
                   {item.nome}
                 </label>
               ))}
@@ -130,26 +189,34 @@ export default function ModalFiltros({ isOpen, onClose, onSalvar }) {
             <div className="filtro-card">
               <h3>Subgrupos</h3>
 
-              {subgrupos.map((item) => (
-                <label key={item.id} className="checkbox-item">
-                  <input
-                    type="checkbox"
-                    checked={subgruposSelecionados.includes(String(item.id))}
-                    onChange={() =>
-                      toggleValue(
-                        String(item.id),
-                        subgruposSelecionados,
-                        setSubgruposSelecionados,
-                      )
-                    }
-                  />
-                  {item.nome}
-                </label>
-              ))}
+              {gruposSelecionados.length === 0 ? (
+                <div className="empty-subgrupos">
+                  Selecione um grupo para visualizar os subgrupos
+                </div>
+              ) : (
+                subgrupos.map((item) => (
+                  <label key={item.id} className="checkbox-item">
+                    <input
+                      type="checkbox"
+                      checked={subgruposSelecionados.includes(String(item.id))}
+                      onChange={() =>
+                        toggleValue(
+                          String(item.id),
+                          subgruposSelecionados,
+                          setSubgruposSelecionados,
+                        )
+                      }
+                    />
+
+                    {item.nome}
+                  </label>
+                ))
+              )}
             </div>
           </div>
         )}
 
+        {/* FOOTER */}
         <div className="modal-footer">
           <button className="btn btn-secondary" onClick={onClose}>
             Cancelar

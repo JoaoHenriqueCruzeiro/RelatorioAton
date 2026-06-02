@@ -50,30 +50,6 @@ async function buscarProdutosPais(filtros = {}) {
       ${subgrupoFiltro}
     `;
 
-    if (filtros.fabricantes?.length) {
-      query += `
-        AND A.FABRICANTE IN (
-          ${filtros.fabricantes.map((f) => `'${f}'`).join(",")}
-        )
-      `;
-    }
-
-    if (filtros.grupos?.length) {
-      query += `
-        AND A.GRUPO IN (
-          ${filtros.grupos.map((g) => `'${g}'`).join(",")}
-        )
-      `;
-    }
-
-    if (filtros.subgrupos?.length) {
-      query += `
-        AND A.SUBGRUPO IN (
-          ${filtros.subgrupos.map((s) => `'${s}'`).join(",")}
-        )
-      `;
-    }
-
     query += `
       ORDER BY A.descricao
     `;
@@ -124,7 +100,6 @@ async function buscarFilhos(paiId) {
           FROM materiais A
 
           WHERE A.pai = @pai
-          AND A.inativo = 'N'
 
           ORDER BY
             A.descricao
@@ -172,12 +147,13 @@ async function buscarSubgrupos() {
 
   const result = await pool.request().query(`
     SELECT DISTINCT
-      SUBGRUPO
-    FROM materiais
+      CODIGO_SUBGRUPO AS id,
+      DESCRICAO AS nome
+    FROM SUB_GRUPO
     WHERE
-      SUBGRUPO IS NOT NULL
-      AND SUBGRUPO <> ''
-    ORDER BY SUBGRUPO
+      CODIGO_SUBGRUPO IS NOT NULL
+      AND CODIGO_SUBGRUPO <> ''
+    ORDER BY DESCRICAO
   `);
 
   return result.recordset;
@@ -190,12 +166,12 @@ async function buscarSubgruposPorGrupo(grupos) {
 
   const result = await pool.request().query(`
     SELECT
-      codsubgrupo AS id,
-      descricao AS nome,
-      codgrupo
-    FROM subgrupos
-    WHERE codgrupo IN (${lista})
-    ORDER BY descricao
+      CODIGO_SUBGRUPO AS id,
+      DESCRICAO AS nome,
+      CODIGO_GRUPO
+    FROM SUB_GRUPO
+    WHERE CODIGO_GRUPO IN (${lista})
+    ORDER BY DESCRICAO
   `);
 
   return result.recordset;
@@ -207,4 +183,5 @@ module.exports = {
   buscarFabricantes,
   buscarGrupos,
   buscarSubgrupos,
+  buscarSubgruposPorGrupo,
 };

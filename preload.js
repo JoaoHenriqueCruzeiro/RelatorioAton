@@ -3,7 +3,8 @@ const { contextBridge, ipcRenderer } = require("electron");
 console.log("PRELOAD FUNCIONANDO");
 
 contextBridge.exposeInMainWorld("api", {
-  buscarProdutosPais: () => ipcRenderer.invoke("buscar-produtos-pais"),
+  buscarProdutosPais: (filtros) =>
+    ipcRenderer.invoke("buscar-produtos-pais", filtros),
 
   buscarFilhos: (parentId) => ipcRenderer.invoke("buscar-filhos", parentId),
 
@@ -17,4 +18,7 @@ contextBridge.exposeInMainWorld("api", {
   buscarGrupos: () => ipcRenderer.invoke("buscar-grupos"),
 
   buscarSubgrupos: () => ipcRenderer.invoke("buscar-subgrupos"),
+
+  buscarSubgruposPorGrupo: (grupos) =>
+    ipcRenderer.invoke("buscar-subgrupos-por-grupo", grupos),
 });
