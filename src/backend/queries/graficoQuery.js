@@ -1,12 +1,5 @@
 const db = require("../db");
 
-// ======================================
-// GRÁFICO VENDAS
-// ======================================
-
-// ======================================
-// GRÁFICO VENDAS
-// ======================================
 async function buscarGraficoVendas({
   produtosIds = [],
   dataInicial,
@@ -17,20 +10,14 @@ async function buscarGraficoVendas({
     return [];
   }
 
-  
-
-  const placeholders =
-    produtosIds.map(() => "?").join(",");
+  const placeholders = produtosIds.map(() => "?").join(",");
 
   const campoValor =
-    metrica === "faturamento"
-      ? "SUM(i.VLR_TOTAL)"
-      : "SUM(i.QUANT)";
+    metrica === "faturamento" ? "SUM(i.VLR_TOTAL)" : "SUM(i.QUANT)";
 
   const [rows] = await db.query(
     `
     SELECT
-
       DATE_FORMAT(
         p.DATA,
         '%m/%Y'
@@ -50,29 +37,21 @@ async function buscarGraficoVendas({
     WHERE
       i.CODID IN (${placeholders})
 
-      AND p.DATA BETWEEN ? AND ?
+      AND DATE(p.DATA)
+        BETWEEN DATE(?) AND DATE(?)
 
     GROUP BY
-
       YEAR(p.DATA),
-
       MONTH(p.DATA),
-
       i.CODID,
-
       i.DESCRICAOPROD
 
     ORDER BY
-
       YEAR(p.DATA),
-
-      MONTH(p.DATA)
+      MONTH(p.DATA),
+      i.DESCRICAOPD
     `,
-    [
-      ...produtosIds,
-      dataInicial,
-      dataFinal,
-    ],
+    [...produtosIds, dataInicial, dataFinal],
   );
 
   return rows;
