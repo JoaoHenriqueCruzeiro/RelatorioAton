@@ -1,4 +1,4 @@
-const db = require("../db");
+const { poolPromise, sql } = require("../db");
 
 async function buscarGraficoVendas({
   produtosIds = [],
@@ -10,18 +10,31 @@ async function buscarGraficoVendas({
     return [];
   }
 
-  const placeholders = produtosIds.map(() => "?").join(",");
+  const pool = await poolPromise;
+
+  const request = pool.request();
+
+  request.input("dataInicial", sql.DateTime, new Date(dataInicial));
+
+  request.input("dataFinal", sql.DateTime, new Date(dataFinal));
+
+  produtosIds.forEach((id, index) => {
+    request.input(`id${index}`, sql.Int, Number(id));
+  });
+
+  const placeholders = produtosIds.map((_, index) => `@id${index}`).join(",");
 
   const campoValor =
     metrica === "faturamento" ? "SUM(i.VLR_TOTAL)" : "SUM(i.QUANT)";
 
-  const [rows] = await db.query(
-    `
+  const result = await request.query(`
     SELECT
-      DATE_FORMAT(
-        p.DATA,
-        '%m/%Y'
-      ) AS mes,
+
+      YEAR(p.DATA) AS ano,
+
+      MONTH(p.DATA) AS mesNumero,
+
+      FORMAT(p.DATA, 'MM/yyyy') AS mes,
 
       i.CODID,
 
@@ -35,26 +48,38 @@ async function buscarGraficoVendas({
       ON p.PEDIDO = i.PEDIDO
 
     WHERE
+
       i.CODID IN (${placeholders})
 
-      AND DATE(p.DATA)
-        BETWEEN DATE(?) AND DATE(?)
+      AND p.DATA BETWEEN
+        @dataInicial
+        AND @dataFinal
 
     GROUP BY
+
       YEAR(p.DATA),
+
       MONTH(p.DATA),
+
+      FORMAT(p.DATA, 'MM/yyyy'),
+
       i.CODID,
+
       i.DESCRICAOPROD
 
     ORDER BY
-      YEAR(p.DATA),
-      MONTH(p.DATA),
-      i.DESCRICAOPD
-    `,
-    [...produtosIds, dataInicial, dataFinal],
-  );
 
-  return rows;
+      YEAR(p.DATA),
+
+      MONTH(p.DATA)
+  `);
+
+    
+  console.log("Produtos:", produtosIds);
+  console.log("Data Inicial:", dataInicial);
+  console.log("Data Final:", dataFinal);
+  console.log(result.recordset);
+  return result.recordset;
 }
 
 module.exports = {

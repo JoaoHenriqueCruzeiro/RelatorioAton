@@ -149,6 +149,10 @@ export default function App() {
     carregarProdutos();
   }, []);
 
+  function converterData(dateValue) {
+    return new Date(dateValue.year, dateValue.month - 1, dateValue.day);
+  }
+
   // ======================================================
   // CONSULTAR VENDAS
   // ======================================================
@@ -160,9 +164,16 @@ export default function App() {
         return;
       }
 
+      console.log(dataInicial);
+      console.log(dataFinal);
+      console.log(typeof dataInicial);
+
       setLoadingTabela(true);
 
-      const produtosIds = selectedProducts.map((p) => p.codid);
+      console.log("PRODUTOS SELECIONADOS:");
+      console.log(selectedProducts);
+
+      const produtosIds = selectedProducts.map((produto) => produto.id);
 
       // ==================================
       // TABELA
@@ -183,20 +194,37 @@ export default function App() {
 
       const formatarData = (d) =>
         `${d.year}-${String(d.month).padStart(2, "0")}-${String(d.day).padStart(2, "0")}`;
-      
+
       const grafico = await window.api.buscarGraficoVendas({
         produtosIds,
-        dataInicial: formatarData(dataInicial),
-        dataFinal: formatarData(dataFinal),
+
+        dataInicial: converterData(dataInicial),
+
+        dataFinal: converterData(dataFinal),
+
         metrica: metricaGrafico,
       });
 
+      console.log("DADOS GRAFICO:", grafico);
+
       setDadosGrafico(grafico);
+
+      const resumo = await window.api.buscarResumoVendas({
+        produtosIds,
+
+        dataInicial: converterData(dataInicial),
+
+        dataFinal: converterData(dataFinal),
+      });
+
+      setDadosTabela(resumo);
     } catch (error) {
       console.error(error);
     } finally {
       setLoadingTabela(false);
     }
+
+    
   }
 
   // ======================================================
@@ -220,6 +248,9 @@ export default function App() {
           (a, b) => Number(b.faturamento) - Number(a.faturamento),
         )[0]
       : null;
+
+  const ticketMedio =
+    quantidadeTotal > 0 ? faturamentoTotal / quantidadeTotal : 0;
 
   // ======================================================
   // SPECTRUM
@@ -327,6 +358,7 @@ export default function App() {
           {/* ========================================= */}
           <Flex direction="row" gap="size-200" marginBottom="size-250" wrap>
             {/* FATURAMENTO */}
+
             <View
               backgroundColor="static-gray-100"
               padding="size-200"
@@ -334,15 +366,12 @@ export default function App() {
               flex
             >
               <Heading level={4} margin={0}>
-                Faturamento Total
+                Produto Destaque
               </Heading>
 
               <Content>
                 <Text size="XL" weight="bold">
-                  {faturamentoTotal.toLocaleString("pt-BR", {
-                    style: "currency",
-                    currency: "BRL",
-                  })}
+                  {produtoDestaque?.nome || "-"}
                 </Text>
               </Content>
             </View>
@@ -366,6 +395,7 @@ export default function App() {
             </View>
 
             {/* DESTAQUE */}
+
             <View
               backgroundColor="static-gray-100"
               padding="size-200"
@@ -373,12 +403,35 @@ export default function App() {
               flex
             >
               <Heading level={4} margin={0}>
-                Produto Destaque
+                Faturamento Total
               </Heading>
 
               <Content>
                 <Text size="XL" weight="bold">
-                  {produtoDestaque?.nome || "-"}
+                  {faturamentoTotal.toLocaleString("pt-BR", {
+                    style: "currency",
+                    currency: "BRL",
+                  })}
+                </Text>
+              </Content>
+            </View>
+
+            <View
+              backgroundColor="static-gray-100"
+              padding="size-200"
+              borderRadius="medium"
+              flex
+            >
+              <Heading level={4} margin={0}>
+                Ticket Médio
+              </Heading>
+
+              <Content>
+                <Text size="XL" weight="bold">
+                  {ticketMedio.toLocaleString("pt-BR", {
+                    style: "currency",
+                    currency: "BRL",
+                  })}
                 </Text>
               </Content>
             </View>
@@ -392,13 +445,11 @@ export default function App() {
               <TableHeader>
                 <Column key="nome">Produto</Column>
 
-                <Column key="qtd" align="end">
-                  Qtd Vendida
-                </Column>
+                <Column key="qtd">Quantidade</Column>
 
-                <Column key="faturamento" align="end">
-                  Faturamento
-                </Column>
+                <Column key="faturamento">Faturamento</Column>
+
+                <Column key="ticket">Ticket Médio</Column>
               </TableHeader>
 
               <TableBody>
@@ -408,6 +459,7 @@ export default function App() {
 
                     <Cell></Cell>
 
+                    <Cell></Cell>
                     <Cell></Cell>
                   </Row>
                 ) : dadosTabela.length > 0 ? (
@@ -424,6 +476,13 @@ export default function App() {
                           currency: "BRL",
                         })}
                       </Cell>
+
+                      <Cell>
+                        {Number(item.ticketMedio).toLocaleString("pt-BR", {
+                          style: "currency",
+                          currency: "BRL",
+                        })}
+                      </Cell>
                     </Row>
                   ))
                 ) : (
@@ -432,6 +491,7 @@ export default function App() {
 
                     <Cell></Cell>
 
+                    <Cell></Cell>
                     <Cell></Cell>
                   </Row>
                 )}

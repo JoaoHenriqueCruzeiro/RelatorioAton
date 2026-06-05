@@ -11,9 +11,9 @@ const {
   buscarSubgruposPorGrupo,
 } = require("./src/backend/queries/produtosQuery");
 
-const {
-  buscarGraficoVendas,
-} = require("./src/backend/queries/graficoQuery");
+const { buscarGraficoVendas } = require("./src/backend/queries/graficoQuery");
+
+const { buscarResumoVendas } = require("./src/backend/queries/resumoQuery");
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -29,6 +29,8 @@ function createWindow() {
 
       sandbox: false,
     },
+
+    icon: path.join(__dirname, "assets/icons/icon.png"),
   });
 
   // ✅ CORRETO
@@ -68,11 +70,15 @@ ipcMain.handle("buscar-subgrupos-por-grupo", async (_, grupos) => {
   return await buscarSubgruposPorGrupo(grupos);
 });
 
-ipcMain.handle(
-  "buscar-grafico-vendas",
-  async (_, dados) => {
-    return await buscarGraficoVendas(dados);
-  },
-);
+ipcMain.handle("buscar-grafico-vendas", async (_, dados) => {
+  console.log("DADOS RECEBIDOS:");
+  console.log(dados);
+
+  return await buscarGraficoVendas(dados);
+});
+
+ipcMain.handle("buscar-resumo-vendas", async (_, dados) => {
+  return await buscarResumoVendas(dados);
+});
 
 app.whenReady().then(createWindow);
