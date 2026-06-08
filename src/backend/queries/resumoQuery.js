@@ -1,4 +1,6 @@
 const { sql, poolPromise } = require("../db");
+const { buscarIdsRelacionados } = require("./produtosQuery");
+
 
 async function buscarResumoVendas({
   produtosIds = [],
@@ -8,6 +10,8 @@ async function buscarResumoVendas({
   if (!produtosIds.length) {
     return [];
   }
+
+  produtosIds = await buscarIdsRelacionados(produtosIds);
 
   const pool = await poolPromise;
 
