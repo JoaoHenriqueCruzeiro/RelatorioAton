@@ -20,6 +20,9 @@ contextBridge.exposeInMainWorld("api", {
   buscarSubgruposPorGrupo: (grupos) =>
     ipcRenderer.invoke("buscar-subgrupos-por-grupo", grupos),
 
+  buscarIdsRelacionados: (filtros) =>
+    ipcRenderer.invoke("buscar-ids-relacionados", filtros),
+  
   buscarResumoVendas: (dados) =>
     ipcRenderer.invoke("buscar-resumo-vendas", dados),
 });

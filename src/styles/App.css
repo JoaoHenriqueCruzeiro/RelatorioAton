@@ -44,7 +44,6 @@ body,
 
   display: flex;
   align-items: stretch;
-  height: 100vh;
   overflow: hidden;
 }
 
@@ -69,4 +68,48 @@ body,
 /* Garante o comportamento fluido da tabela do Spectrum */
 .tabela-wrapper {
   width: 100%;
+}
+
+.actions-bar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.action-button {
+  border: none;
+  border-radius: 12px;
+  padding: 10px 18px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.15s ease;
+
+  background: #1f2937;
+  color: white;
+}
+
+.action-button:hover {
+  transform: translateY(-1px);
+}
+
+.action-button.primary {
+  background: #6d3df5;
+}
+
+.action-button.primary:hover {
+  background: #7c4dff;
+}
+
+.action-button.secondary {
+  background: #111827;
+}
+
+.action-button.secondary:hover {
+  background: #1f2937;
 }

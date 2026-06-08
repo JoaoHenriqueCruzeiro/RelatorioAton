@@ -28,17 +28,13 @@ async function buscarProdutosPais(filtros = {}) {
 
         A.descricao AS nome,
 
-        CAST(
-          CASE
-            WHEN EXISTS (
-              SELECT 1
-              FROM materiais x
-              WHERE x.pai = A.codid
-            )
-            THEN 1
-            ELSE 0
-          END
-        AS BIT) AS hasChildren
+        (
+          SELECT COUNT(*)
+          FROM materiais x
+          WHERE
+            x.pai = A.codid
+            AND x.inativo = 'N'
+        ) AS childrenCount
 
       FROM materiais A
 
@@ -85,17 +81,13 @@ async function buscarFilhos(paiId) {
 
             A.descricao AS nome,
 
-            CAST(
-              CASE
-                WHEN EXISTS (
-                  SELECT 1
-                  FROM materiais x
-                  WHERE x.pai = A.codid
-                )
-                THEN 1
-                ELSE 0
-              END
-            AS BIT) AS hasChildren
+            (
+              SELECT COUNT(*)
+              FROM materiais x
+              WHERE
+                x.pai = A.codid
+                AND x.inativo = 'N'
+            ) AS childrenCount
 
           FROM materiais A
 
@@ -112,6 +104,49 @@ async function buscarFilhos(paiId) {
 
     return [];
   }
+}
+
+async function buscarIdsRelacionados(ids = []) {
+  const pool = await poolPromise;
+
+  const request = pool.request();
+
+  ids.forEach((id, i) => {
+    request.input(`id${i}`, sql.Int, id);
+  });
+
+  const placeholders = ids.map((_, i) => `@id${i}`).join(",");
+
+  const result = await request.query(`
+    WITH arvore AS (
+
+      SELECT
+        codid,
+        pai
+
+      FROM materiais
+
+      WHERE codid IN (${placeholders})
+
+      UNION ALL
+
+      SELECT
+        m.codid,
+        m.pai
+
+      FROM materiais m
+
+      INNER JOIN arvore a
+        ON m.pai = a.codid
+
+      WHERE m.inativo = 'N'
+    )
+
+    SELECT DISTINCT codid
+    FROM arvore
+  `);
+
+  return result.recordset.map((x) => x.codid);
 }
 
 async function buscarFabricantes() {
@@ -180,6 +215,7 @@ async function buscarSubgruposPorGrupo(grupos) {
 module.exports = {
   buscarProdutosPais,
   buscarFilhos,
+  buscarIdsRelacionados,
   buscarFabricantes,
   buscarGrupos,
   buscarSubgrupos,

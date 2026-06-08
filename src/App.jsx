@@ -290,7 +290,7 @@ export default function App() {
         {/* =========================================== */}
         {/* BOTÃO CONSULTAR */}
         {/* =========================================== */}
-        <button className="consultar-button" onClick={consultarVendas}>
+        <button className="action-button secondary" onClick={consultarVendas}>
           Consultar Vendas
         </button>
         <button
@@ -303,7 +303,7 @@ export default function App() {
           Temas
         </button>
         <button
-          className="filter-button"
+          className="action-button secondary"
           onClick={() => setIsFilterModalOpen(true)}
         >
           Filtros

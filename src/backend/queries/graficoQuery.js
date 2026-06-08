@@ -1,4 +1,6 @@
 const { poolPromise, sql } = require("../db");
+const { buscarIdsRelacionados } = require("./produtosQuery");
+
 
 async function buscarGraficoVendas({
   produtosIds = [],
@@ -9,6 +11,8 @@ async function buscarGraficoVendas({
   if (!produtosIds.length) {
     return [];
   }
+
+  produtosIds = await buscarIdsRelacionados(produtosIds);
 
   const pool = await poolPromise;
 
@@ -38,7 +42,7 @@ async function buscarGraficoVendas({
 
       i.CODID,
 
-      i.DESCRICAOPROD AS produto,
+      m.DESCRICAO AS produto,
 
       ${campoValor} AS valor
 
@@ -46,6 +50,9 @@ async function buscarGraficoVendas({
 
     INNER JOIN pedido_materiais_cliente p
       ON p.PEDIDO = i.PEDIDO
+
+    INNER JOIN Materiais m
+    ON m.CODID = i.CODID
 
     WHERE
 
@@ -65,7 +72,7 @@ async function buscarGraficoVendas({
 
       i.CODID,
 
-      i.DESCRICAOPROD
+      m.DESCRICAO
 
     ORDER BY
 
@@ -74,7 +81,6 @@ async function buscarGraficoVendas({
       MONTH(p.DATA)
   `);
 
-    
   console.log("Produtos:", produtosIds);
   console.log("Data Inicial:", dataInicial);
   console.log("Data Final:", dataFinal);

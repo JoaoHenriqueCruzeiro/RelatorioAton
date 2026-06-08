@@ -9,6 +9,7 @@ const {
   buscarGrupos,
   buscarSubgrupos,
   buscarSubgruposPorGrupo,
+  buscarIdsRelacionados,
 } = require("./src/backend/queries/produtosQuery");
 
 const { buscarGraficoVendas } = require("./src/backend/queries/graficoQuery");
@@ -68,6 +69,10 @@ ipcMain.handle("buscar-subgrupos", async () => {
 
 ipcMain.handle("buscar-subgrupos-por-grupo", async (_, grupos) => {
   return await buscarSubgruposPorGrupo(grupos);
+});
+  
+ipcMain.handle("buscar-ids-relacionados", async (_, filtros) => {
+  return await buscarIdsRelacionados(filtros);
 });
 
 ipcMain.handle("buscar-grafico-vendas", async (_, dados) => {

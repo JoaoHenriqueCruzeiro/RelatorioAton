@@ -1,17 +1,8 @@
-import React, {
-  useMemo,
-  useState,
-} from "react";
+import React, { useMemo, useState } from "react";
 
-import {
-  SimpleTreeView,
-  TreeItem,
-} from "@mui/x-tree-view";
+import { SimpleTreeView, TreeItem } from "@mui/x-tree-view";
 
-import {
-  Box,
-  Typography,
-} from "@mui/material";
+import { Box, Typography } from "@mui/material";
 
 import FolderIcon from "@mui/icons-material/Folder";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
@@ -23,12 +14,10 @@ import "../styles/sidebarProdutos.css";
 // MONTA ÁRVORE
 // ========================================
 function formatarDados(lista) {
-
   const map = {};
   const raizes = [];
 
   lista.forEach((item) => {
-
     map[item.id] = {
       ...item,
       children: [],
@@ -36,18 +25,9 @@ function formatarDados(lista) {
   });
 
   lista.forEach((item) => {
-
-    if (
-      item.parentId &&
-      map[item.parentId]
-    ) {
-
-      map[item.parentId]
-        .children
-        .push(map[item.id]);
-
+    if (item.parentId && map[item.parentId]) {
+      map[item.parentId].children.push(map[item.id]);
     } else {
-
       raizes.push(map[item.id]);
     }
   });
@@ -56,97 +36,45 @@ function formatarDados(lista) {
 }
 
 export default function SidebarProdutos({
-
   produtos = [],
-
   setProdutos,
-
   onSelectionChange,
-
 }) {
+  const [expanded, setExpanded] = useState([]);
 
-  const [expanded,
-    setExpanded] =
-    useState([]);
+  const [selected, setSelected] = useState([]);
 
-  const [selected,
-    setSelected] =
-    useState([]);
-
-  const produtosEmArvore =
-    useMemo(() => {
-
-      return formatarDados(
-        produtos
-      );
-
-    }, [produtos]);
+  const produtosEmArvore = useMemo(() => {
+    return formatarDados(produtos);
+  }, [produtos]);
 
   // ========================================
   // EXPANDIR
   // ========================================
-  async function handleExpanded(
-    event,
-    itemIds
-  ) {
-
-    const novos =
-      itemIds.filter(
-        (id) =>
-          !expanded.includes(id)
-      );
+  async function handleExpanded(event, itemIds) {
+    const novos = itemIds.filter((id) => !expanded.includes(id));
 
     for (const paiId of novos) {
+      const pai = produtos.find((p) => String(p.id) === String(paiId));
 
-      const pai =
-        produtos.find(
-          (p) =>
-            String(p.id) ===
-            String(paiId)
-        );
+      const jaTemFilhos = produtos.some(
+        (p) => String(p.parentId) === String(paiId),
+      );
 
-      const jaTemFilhos =
-        produtos.some(
-          (p) =>
-            String(
-              p.parentId
-            ) ===
-            String(paiId)
-        );
+      if (pai?.childrenCount > 0 && !jaTemFilhos) {
+        try {
+          const filhos = await window.api.buscarFilhos(Number(paiId));
 
-      if (
-        pai?.hasChildren &&
-        !jaTemFilhos
-      ) {
+          setProdutos((prev) => {
+            const ids = new Set(prev.map((p) => p.id));
 
-        const filhos =
-          await window.api.buscarFilhos(
-            Number(paiId)
-          );
+            const novosFilhos = filhos.filter((f) => !ids.has(f.id));
 
-        setProdutos((prev) => {
-
-          const ids =
-            new Set(
-              prev.map(
-                (p) => p.id
-              )
-            );
-
-          const novosFilhos =
-            filhos.filter(
-              (f) =>
-                !ids.has(f.id)
-            );
-
-          return [
-
-            ...prev,
-
-            ...novosFilhos,
-
-          ];
-        });
+            return [...prev, ...novosFilhos];
+          });
+        } catch (erro) {
+          console.error("Erro carregando filhos:", erro);
+        }
       }
     }
 
@@ -156,137 +84,72 @@ export default function SidebarProdutos({
   // ========================================
   // SELEÇÃO
   // ========================================
-  function handleSelected(
-    event,
-    itemIds
-  ) {
-
-    const ids =
-      Array.isArray(itemIds)
-        ? itemIds
-        : [itemIds];
+  function handleSelected(event, itemIds) {
+    const ids = Array.isArray(itemIds) ? itemIds : [itemIds];
 
     setSelected(ids);
 
-    const selecionados =
-      produtos.filter((p) =>
-        ids.includes(
-          String(p.id)
-        )
-      );
+    const selecionados = produtos.filter((p) => ids.includes(String(p.id)));
 
-    onSelectionChange?.(
-      selecionados
-    );
+    onSelectionChange?.(selecionados);
   }
 
   // ========================================
-  // RENDER ITEM
+  // RENDER
   // ========================================
   function renderTree(items = []) {
-
     return items.map((item) => {
-
-      const possuiFilhos =
-        item.hasChildren ||
-        item.children?.length > 0;
+      const possuiFilhos = item.childrenCount > 0;
 
       return (
-
         <TreeItem
           key={item.id}
           itemId={String(item.id)}
-
           label={
+            <Box className="tree-item-content">
+              {possuiFilhos ? (
+                expanded.includes(String(item.id)) ? (
+                  <FolderOpenIcon fontSize="small" className="tree-icon" />
+                ) : (
+                  <FolderIcon fontSize="small" className="tree-icon" />
+                )
+              ) : (
+                <Inventory2Icon fontSize="small" className="tree-icon" />
+              )}
 
-            <Box
-              className="tree-item-content"
-            >
-
-              {
-
-                possuiFilhos
-                  ? expanded.includes(
-                      String(item.id)
-                    )
-
-                    ? (
-                      <FolderOpenIcon
-                        fontSize="small"
-                        className="tree-icon"
-                      />
-                    )
-
-                    : (
-                      <FolderIcon
-                        fontSize="small"
-                        className="tree-icon"
-                      />
-                    )
-
-                  : (
-                    <Inventory2Icon
-                      fontSize="small"
-                      className="tree-icon"
-                    />
-                  )
-              }
-
-              <Typography
-                className="tree-label"
-              >
-                {item.nome}
-              </Typography>
-
+              <Typography className="tree-label">{item.nome}</Typography>
             </Box>
           }
         >
+          {/* filhos reais */}
+          {item.children?.length > 0 && renderTree(item.children)}
 
-          {
-            item.children?.length > 0 &&
-            renderTree(item.children)
-          }
-
+          {/* placeholder para forçar seta */}
+          {possuiFilhos && item.children?.length === 0 && (
+            <TreeItem itemId={`placeholder-${item.id}`} label="" />
+          )}
         </TreeItem>
       );
     });
   }
 
   return (
-
     <aside className="sidebar-produtos">
-
       <div className="sidebar-header">
         <h2>Produtos</h2>
       </div>
 
       <div className="tree-container">
-
         <SimpleTreeView
-
           multiSelect
-
           expandedItems={expanded}
-
           selectedItems={selected}
-
-          onExpandedItemsChange={
-            handleExpanded
-          }
-
-          onSelectedItemsChange={
-            handleSelected
-          }
+          onExpandedItemsChange={handleExpanded}
+          onSelectedItemsChange={handleSelected}
         >
-
-          {renderTree(
-            produtosEmArvore
-          )}
-
+          {renderTree(produtosEmArvore)}
         </SimpleTreeView>
-
       </div>
-
     </aside>
   );
 }
