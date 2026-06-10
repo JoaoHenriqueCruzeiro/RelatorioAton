@@ -35,6 +35,42 @@ function formatarDados(lista) {
   return raizes;
 }
 
+const ProdutoItem = React.memo(function ProdutoItem({
+  item,
+  expanded,
+  renderTree,
+}) {
+  const possuiFilhos = item.childrenCount > 0;
+
+  return (
+    <TreeItem
+      itemId={String(item.id)}
+      label={
+        <Box className="tree-item-content">
+          {possuiFilhos ? (
+            expanded.includes(String(item.id)) ? (
+              <FolderOpenIcon fontSize="small" className="tree-icon" />
+            ) : (
+              <FolderIcon fontSize="small" className="tree-icon" />
+            )
+          ) : (
+            <Inventory2Icon fontSize="small" className="tree-icon" />
+          )}
+
+          <Typography className="tree-label">{item.nome}</Typography>
+        </Box>
+      }
+    >
+      {item.children?.length > 0 && renderTree(item.children)}
+
+      {possuiFilhos && item.children?.length === 0 && (
+        <TreeItem itemId={`placeholder-${item.id}`} label="" />
+      )}
+    </TreeItem>
+  );
+});
+
+
 export default function SidebarProdutos({
   produtos = [],
   setProdutos,
@@ -52,34 +88,44 @@ export default function SidebarProdutos({
   // EXPANDIR
   // ========================================
   async function handleExpanded(event, itemIds) {
-    const novos = itemIds.filter((id) => !expanded.includes(id));
+  const novos = itemIds.filter(
+    (id) => !expanded.includes(id),
+  );
 
-    for (const paiId of novos) {
-      const pai = produtos.find((p) => String(p.id) === String(paiId));
+  const promessas = novos.map(async (paiId) => {
+    const pai = produtos.find(
+      (p) => String(p.id) === String(paiId),
+    );
 
-      const jaTemFilhos = produtos.some(
-        (p) => String(p.parentId) === String(paiId),
+    const jaTemFilhos = produtos.some(
+      (p) => String(p.parentId) === String(paiId),
+    );
+
+    if (pai?.childrenCount > 0 && !jaTemFilhos) {
+      return await window.api.buscarFilhos(
+        Number(paiId),
       );
-
-      if (pai?.childrenCount > 0 && !jaTemFilhos) {
-        try {
-          const filhos = await window.api.buscarFilhos(Number(paiId));
-
-          setProdutos((prev) => {
-            const ids = new Set(prev.map((p) => p.id));
-
-            const novosFilhos = filhos.filter((f) => !ids.has(f.id));
-
-            return [...prev, ...novosFilhos];
-          });
-        } catch (erro) {
-          console.error("Erro carregando filhos:", erro);
-        }
-      }
     }
 
-    setExpanded(itemIds);
-  }
+    return [];
+  });
+
+  const resultados = await Promise.all(promessas);
+
+  const filhos = resultados.flat();
+
+  setProdutos((prev) => {
+    const ids = new Set(prev.map((x) => x.id));
+
+    const novosFilhos = filhos.filter(
+      (x) => !ids.has(x.id),
+    );
+
+    return [...prev, ...novosFilhos];
+  });
+
+  setExpanded(itemIds);
+}
 
   // ========================================
   // SELEÇÃO
@@ -98,39 +144,14 @@ export default function SidebarProdutos({
   // RENDER
   // ========================================
   function renderTree(items = []) {
-    return items.map((item) => {
-      const possuiFilhos = item.childrenCount > 0;
-
-      return (
-        <TreeItem
-          key={item.id}
-          itemId={String(item.id)}
-          label={
-            <Box className="tree-item-content">
-              {possuiFilhos ? (
-                expanded.includes(String(item.id)) ? (
-                  <FolderOpenIcon fontSize="small" className="tree-icon" />
-                ) : (
-                  <FolderIcon fontSize="small" className="tree-icon" />
-                )
-              ) : (
-                <Inventory2Icon fontSize="small" className="tree-icon" />
-              )}
-
-              <Typography className="tree-label">{item.nome}</Typography>
-            </Box>
-          }
-        >
-          {/* filhos reais */}
-          {item.children?.length > 0 && renderTree(item.children)}
-
-          {/* placeholder para forçar seta */}
-          {possuiFilhos && item.children?.length === 0 && (
-            <TreeItem itemId={`placeholder-${item.id}`} label="" />
-          )}
-        </TreeItem>
-      );
-    });
+    return items.map((item) => (
+      <ProdutoItem
+        key={item.id}
+        item={item}
+        expanded={expanded}
+        renderTree={renderTree}
+      />
+    ));
   }
 
   return (

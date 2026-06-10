@@ -92,6 +92,7 @@ async function buscarFilhos(paiId) {
           FROM materiais A
 
           WHERE A.pai = @pai
+          AND A.inativo = 'N'
 
           ORDER BY
             A.descricao

@@ -103,7 +103,11 @@ export default function App() {
 
         console.log("window.api carregou!");
 
+        console.time("pais");
+
         const teste = await window.api.buscarProdutosPais();
+
+        console.timeEnd("pais");
 
         console.log("Resposta IPC:", teste);
       } catch (error) {
@@ -118,36 +122,24 @@ export default function App() {
   // CARREGA PRODUTOS
   // ======================================================
   useEffect(() => {
-    async function carregarProdutos() {
-      try {
-        console.log("WINDOW API:", window.api);
-
-        setLoadingProdutos(true);
-
-        if (!window.api) {
-          console.error("window.api undefined");
-
-          return;
-        }
-
-        console.log("Tentando buscar produtos...");
-
-        const response = await window.api.buscarProdutosPais(filtros);
-
-        console.log("RESPOSTA IPC:", response);
-
-        setProdutos(response);
-      } catch (error) {
-        console.error("ERRO AO CARREGAR PRODUTOS:");
-
-        console.error(error);
-      } finally {
-        setLoadingProdutos(false);
-      }
-    }
-
     carregarProdutos();
   }, []);
+
+  async function carregarProdutos() {
+    try {
+      if (!window.api) return;
+
+      const response = await window.api.buscarProdutosPais(filtros);
+
+      requestAnimationFrame(() => {
+        setProdutos(response);
+        setLoadingProdutos(false);
+      });
+    } catch (error) {
+      console.error(error);
+      setLoadingProdutos(false);
+    }
+  }
 
   function converterData(dateValue) {
     return new Date(dateValue.year, dateValue.month - 1, dateValue.day);
