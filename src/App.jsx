@@ -91,32 +91,7 @@ export default function App() {
   // ======================================================
   // TESTE IPC
   // ======================================================
-  useEffect(() => {
-    async function testeIPC() {
-      try {
-        console.log("Tentando acessar window.api...");
-
-        if (!window.api) {
-          console.error("window.api está undefined");
-          return;
-        }
-
-        console.log("window.api carregou!");
-
-        console.time("pais");
-
-        const teste = await window.api.buscarProdutosPais();
-
-        console.timeEnd("pais");
-
-        console.log("Resposta IPC:", teste);
-      } catch (error) {
-        console.error("Erro IPC:", error);
-      }
-    }
-
-    testeIPC();
-  }, []);
+  
 
   // ======================================================
   // CARREGA PRODUTOS
@@ -129,11 +104,20 @@ export default function App() {
     try {
       if (!window.api) return;
 
+      console.time("buscarProdutosPais");
+
       const response = await window.api.buscarProdutosPais(filtros);
+
+      console.time("buscarProdutosPais");
+
+      console.time("setProdutos");
+
 
       requestAnimationFrame(() => {
         setProdutos(response);
         setLoadingProdutos(false);
+
+        console.timeEnd("setProdutos");
       });
     } catch (error) {
       console.error(error);
