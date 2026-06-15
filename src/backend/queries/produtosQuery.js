@@ -195,6 +195,12 @@ async function buscarSubgrupos() {
   return result.recordset;
 }
 
+async function buscarProdutosPorFiltro(filtros) {
+  const produtos = await buscarProdutosPais(filtros);
+
+  return produtos.map((p) => p.id);
+}
+
 async function buscarSubgruposPorGrupo(grupos) {
   const pool = await poolPromise;
 
@@ -213,6 +219,21 @@ async function buscarSubgruposPorGrupo(grupos) {
   return result.recordset;
 }
 
+async function buscarTodosProdutosPesquisa() {
+  const pool = await poolPromise;
+
+  const result = await pool.request().query(`
+    SELECT
+      codid AS id,
+      descricao AS nome
+    FROM materiais
+    WHERE inativo = 'N'
+    ORDER BY descricao
+  `);
+
+  return result.recordset;
+}
+
 module.exports = {
   buscarProdutosPais,
   buscarFilhos,
@@ -221,4 +242,6 @@ module.exports = {
   buscarGrupos,
   buscarSubgrupos,
   buscarSubgruposPorGrupo,
+  buscarTodosProdutosPesquisa,
+  buscarProdutosPorFiltro,
 };

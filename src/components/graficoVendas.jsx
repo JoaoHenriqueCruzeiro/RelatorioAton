@@ -29,10 +29,11 @@ ChartJS.register(
 export default function GraficoVendas({
   produtosSelecionados = [],
   dados = [],
+  metrica,
+  setMetrica,
 }) {
   const [chartType, setChartType] = useState("line");
 
-  const [metrica, setMetrica] = useState("quantidade");
 
   console.log("GRAFICO RECEBEU:", dados);
 
@@ -240,14 +241,15 @@ export default function GraficoVendas({
           >
             <option value="line">Linha</option>
             <option value="bar">Barra</option>
-            <option value="stacked">Área Empilhada</option>
           </select>
         </div>
       </div>
 
       <div className="grafico-container">
-        {produtosSelecionados.length === 0 ? (
-          <div className="empty-chart">Selecione um produto</div>
+        {!dados.length && !produtosSelecionados.length ? (
+          <div className="empty-chart">
+            Selecione produtos ou utilize os filtros
+          </div>
         ) : dados.length === 0 ? (
           <div className="empty-chart">Nenhum dado encontrado</div>
         ) : (

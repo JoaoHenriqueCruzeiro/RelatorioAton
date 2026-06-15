@@ -22,7 +22,13 @@ contextBridge.exposeInMainWorld("api", {
 
   buscarIdsRelacionados: (filtros) =>
     ipcRenderer.invoke("buscar-ids-relacionados", filtros),
-  
+
   buscarResumoVendas: (dados) =>
     ipcRenderer.invoke("buscar-resumo-vendas", dados),
+
+  buscarTodosProdutosPesquisa: () =>
+    ipcRenderer.invoke("buscar-todos-produtos-pesquisa"),
+
+  buscarProdutosPorFiltro: (filtros) =>
+    ipcRenderer.invoke("buscar-produtos-por-filtro", filtros),
 });

@@ -65,13 +65,13 @@ export default function App() {
 
   const [loadingTabela, setLoadingTabela] = useState(false);
 
+  const [metricaGrafico, setMetricaGrafico] = useState("quantidade");
+
   const [dataInicial, setDataInicial] = useState(today(getLocalTimeZone()));
 
   const [dataFinal, setDataFinal] = useState(today(getLocalTimeZone()));
 
   const [isFiltroOpen, setIsFiltroOpen] = useState(false);
-
-  const [metricaGrafico, setMetricaGrafico] = useState("quantidade");
 
   const [filtros, setFiltros] = useState({
     fabricantes: [],
@@ -81,6 +81,8 @@ export default function App() {
     subgrupos: [],
   });
 
+  const [selectedIds, setSelectedIds] = useState([]);
+
   // ======================================================
   // TEMA
   // ======================================================
@@ -88,10 +90,6 @@ export default function App() {
     trocaTema(theme);
   }, [theme]);
 
-  // ======================================================
-  // TESTE IPC
-  // ======================================================
-  
 
   // ======================================================
   // CARREGA PRODUTOS
@@ -99,6 +97,8 @@ export default function App() {
   useEffect(() => {
     carregarProdutos();
   }, []);
+
+
 
   async function carregarProdutos() {
     try {
@@ -108,7 +108,7 @@ export default function App() {
 
       const response = await window.api.buscarProdutosPais(filtros);
 
-      console.time("buscarProdutosPais");
+      console.timeEnd("buscarProdutosPais");
 
       console.time("setProdutos");
 
@@ -134,10 +134,22 @@ export default function App() {
   // ======================================================
   async function consultarVendas() {
     try {
-      if (!selectedProducts.length) {
-        alert("Selecione ao menos um produto");
+      let produtosIds = [];
 
-        return;
+      if (selectedProducts.length) {
+        produtosIds = selectedProducts.map((produto) => produto.id);
+      } else {
+        const possuiFiltros =
+          filtros.fabricantes.length ||
+          filtros.grupos.length ||
+          filtros.subgrupos.length;
+
+        if (!possuiFiltros) {
+          alert("Selecione ao menos um produto ou filtro");
+          return;
+        }
+
+        produtosIds = await window.api.buscarProdutosPorFiltro(filtros);
       }
 
       console.log(dataInicial);
@@ -149,7 +161,6 @@ export default function App() {
       console.log("PRODUTOS SELECIONADOS:");
       console.log(selectedProducts);
 
-      const produtosIds = selectedProducts.map((produto) => produto.id);
 
       // ==================================
       // TABELA
@@ -238,16 +249,42 @@ export default function App() {
 
     setLoadingProdutos(true);
 
-    try {
-      const produtosFiltrados =
-        await window.api.buscarProdutosPais(novosFiltros);
+    requestAnimationFrame(async () => {
+      try {
+        const produtosFiltrados =
+          await window.api.buscarProdutosPais(novosFiltros);
 
-      setProdutos(produtosFiltrados);
+        setProdutos(produtosFiltrados);
+      } finally {
+        setLoadingProdutos(false);
+      }
+    });
+  }
+
+  async function limparFiltros() {
+    const filtrosVazios = {
+      fabricantes: [],
+      grupos: [],
+      subgrupos: [],
+    };
+
+    setFiltros(filtrosVazios);
+
+    setSelectedIds([]);
+    setSelectedProducts([]);
+
+    setDadosGrafico([]);
+    setDadosTabela([]);
+
+    setLoadingProdutos(true);
+
+    try {
+      const produtos = await window.api.buscarProdutosPais(filtrosVazios);
+
+      setProdutos(produtos);
     } finally {
       setLoadingProdutos(false);
     }
-
-    console.log("FILTROS ENVIADOS", novosFiltros);
   }
 
   // ======================================================
@@ -270,6 +307,15 @@ export default function App() {
           Consultar Vendas
         </button>
         <button
+          className="action-button secondary"
+          onClick={() => {
+            setSelectedIds([]);
+            setSelectedProducts([]);
+          }}
+        >
+          Limpar Seleção
+        </button>
+        {/* <button
           className="theme-button"
           style={{
             backgroundColor: brandColor,
@@ -277,12 +323,15 @@ export default function App() {
           onClick={() => setIsModalOpen(true)}
         >
           Temas
-        </button>
+        </button> */}
         <button
           className="action-button secondary"
           onClick={() => setIsFilterModalOpen(true)}
         >
           Filtros
+        </button>
+        <button className="action-button secondary" onClick={limparFiltros}>
+          Limpar Filtros
         </button>
       </section>
 
@@ -309,6 +358,8 @@ export default function App() {
               produtos={produtos}
               setProdutos={setProdutos}
               onSelectionChange={setSelectedProducts}
+              selected={selectedIds}
+              setSelected={setSelectedIds}
             />
           )}
 

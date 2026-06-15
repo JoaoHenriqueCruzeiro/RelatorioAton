@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from "react";
-
+import React, { useMemo, useState, useEffect, useDeferredValue } from "react";
+import SearchProdutos from "./SearchProdutos";
 import { SimpleTreeView, TreeItem } from "@mui/x-tree-view";
 
 import { Box, Typography } from "@mui/material";
@@ -70,72 +70,113 @@ const ProdutoItem = React.memo(function ProdutoItem({
   );
 });
 
-
 export default function SidebarProdutos({
   produtos = [],
   setProdutos,
   onSelectionChange,
+  selected,
+  setSelected,
 }) {
+  console.time("render sidebar");
+
   const [expanded, setExpanded] = useState([]);
 
-  const [selected, setSelected] = useState([]);
 
   const produtosEmArvore = useMemo(() => {
-    return formatarDados(produtos);
+    console.time("formatarDados");
+
+    const resultado = formatarDados(produtos);
+
+    console.timeEnd("formatarDados");
+
+    return resultado;
   }, [produtos]);
 
   // ========================================
   // EXPANDIR
   // ========================================
   async function handleExpanded(event, itemIds) {
-  const novos = itemIds.filter(
-    (id) => !expanded.includes(id),
-  );
+    const novos = itemIds.filter((id) => !expanded.includes(id));
 
-  const promessas = novos.map(async (paiId) => {
-    const pai = produtos.find(
-      (p) => String(p.id) === String(paiId),
-    );
+    const promessas = novos.map(async (paiId) => {
+      const pai = produtos.find((p) => String(p.id) === String(paiId));
 
-    const jaTemFilhos = produtos.some(
-      (p) => String(p.parentId) === String(paiId),
-    );
-
-    if (pai?.childrenCount > 0 && !jaTemFilhos) {
-      return await window.api.buscarFilhos(
-        Number(paiId),
+      const jaTemFilhos = produtos.some(
+        (p) => String(p.parentId) === String(paiId),
       );
+
+      if (pai?.childrenCount > 0 && !jaTemFilhos) {
+        return await window.api.buscarFilhos(Number(paiId));
+      }
+
+      return [];
+    });
+
+    const resultados = await Promise.all(promessas);
+
+    const filhos = resultados.flat();
+
+    setProdutos((prev) => {
+      const ids = new Set(prev.map((x) => x.id));
+
+      const novosFilhos = filhos.filter((x) => !ids.has(x.id));
+
+      return [...prev, ...novosFilhos];
+    });
+
+    setExpanded(itemIds);
+  }
+
+  function selecionarItemBusca(item) {
+    const id = String(item.id);
+
+    if (selected.includes(id)) {
+      return;
     }
 
-    return [];
-  });
+    const novosSelecionados = [...selected, id];
 
-  const resultados = await Promise.all(promessas);
+    setSelected(novosSelecionados);
 
-  const filhos = resultados.flat();
-
-  setProdutos((prev) => {
-    const ids = new Set(prev.map((x) => x.id));
-
-    const novosFilhos = filhos.filter(
-      (x) => !ids.has(x.id),
+    const selecionados = produtos.filter((p) =>
+      novosSelecionados.includes(String(p.id)),
     );
 
-    return [...prev, ...novosFilhos];
-  });
-
-  setExpanded(itemIds);
-}
+    onSelectionChange?.(selecionados);
+  }
 
   // ========================================
   // SELEÇÃO
   // ========================================
   function handleSelected(event, itemIds) {
+    if (!event) return;
+
     const ids = Array.isArray(itemIds) ? itemIds : [itemIds];
 
-    setSelected(ids);
+    const shift = event.shiftKey;
+    const ctrl = event.ctrlKey || event.metaKey;
 
-    const selecionados = produtos.filter((p) => ids.includes(String(p.id)));
+    if (shift || ctrl) {
+      setSelected(ids);
+
+      const selecionados = produtos.filter((p) => ids.includes(String(p.id)));
+
+      onSelectionChange?.(selecionados);
+
+      return;
+    }
+
+    const clicado = ids[ids.length - 1];
+
+    const novosSelecionados = selected.includes(clicado)
+      ? selected.filter((id) => id !== clicado)
+      : [...selected, clicado];
+
+    setSelected(novosSelecionados);
+
+    const selecionados = produtos.filter((p) =>
+      novosSelecionados.includes(String(p.id)),
+    );
 
     onSelectionChange?.(selecionados);
   }
@@ -154,15 +195,22 @@ export default function SidebarProdutos({
     ));
   }
 
+  console.timeEnd("render sidebar");
+
   return (
     <aside className="sidebar-produtos">
       <div className="sidebar-header">
         <h2>Produtos</h2>
       </div>
 
+      <div className="tree-search">
+        <SearchProdutos onSelecionar={selecionarItemBusca} />
+      </div>
+
       <div className="tree-container">
         <SimpleTreeView
           multiSelect
+          expansionTrigger="iconContainer"
           expandedItems={expanded}
           selectedItems={selected}
           onExpandedItemsChange={handleExpanded}

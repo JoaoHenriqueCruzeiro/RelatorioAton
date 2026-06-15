@@ -10,6 +10,8 @@ const {
   buscarSubgrupos,
   buscarSubgruposPorGrupo,
   buscarIdsRelacionados,
+  buscarTodosProdutosPesquisa,
+  buscarProdutosPorFiltro,
 } = require("./src/backend/queries/produtosQuery");
 
 const { buscarGraficoVendas } = require("./src/backend/queries/graficoQuery");
@@ -34,8 +36,13 @@ function createWindow() {
     icon: path.join(__dirname, "assets/icons/icon.png"),
   });
 
-  // ✅ CORRETO
-  win.loadURL("http://localhost:5173");
+  //  win.setMenu(null);
+
+    if (!app.isPackaged) {
+      win.loadURL("http://localhost:5173");
+    } else {
+      win.loadFile(path.join(__dirname, "dist", "index.html"));
+    }
 }
 
 // =====================================
@@ -84,6 +91,14 @@ ipcMain.handle("buscar-grafico-vendas", async (_, dados) => {
 
 ipcMain.handle("buscar-resumo-vendas", async (_, dados) => {
   return await buscarResumoVendas(dados);
+});
+
+ipcMain.handle("buscar-todos-produtos-pesquisa", async () => {
+  return await buscarTodosProdutosPesquisa();
+});
+
+ipcMain.handle("buscar-produtos-por-filtro", async (_, filtros) => {
+  return await buscarProdutosPorFiltro(filtros);
 });
 
 app.whenReady().then(createWindow);
