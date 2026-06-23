@@ -1,12 +1,12 @@
 const { poolPromise, sql } = require("../db");
 const { buscarIdsRelacionados } = require("./produtosQuery");
 
-
 async function buscarGraficoVendas({
   produtosIds = [],
   dataInicial,
   dataFinal,
   metrica = "quantidade",
+  agruparPorPai = false,
 }) {
   if (!produtosIds.length) {
     return [];
@@ -31,55 +31,79 @@ async function buscarGraficoVendas({
   const campoValor =
     metrica === "faturamento" ? "SUM(i.VLR_TOTAL)" : "SUM(i.QUANT)";
 
+  const campoProduto = agruparPorPai
+    ? `
+      pai.CODID AS produtoId,
+      pai.DESCRICAO AS produto
+    `
+    : `
+      filho.CODID AS produtoId,
+      filho.DESCRICAO AS produto
+    `;
+
+  const groupByProduto = agruparPorPai
+    ? `
+      pai.CODID,
+      pai.DESCRICAO
+    `
+    : `
+      filho.CODID,
+      filho.DESCRICAO
+    `;
+
   const result = await request.query(`
-    SELECT
+  SELECT
 
-      YEAR(p.DATA) AS ano,
+    YEAR(p.DATA) AS ano,
 
-      MONTH(p.DATA) AS mesNumero,
+    MONTH(p.DATA) AS mesNumero,
 
-      FORMAT(p.DATA, 'MM/yyyy') AS mes,
+    FORMAT(p.DATA, 'MM/yyyy') AS mes,
 
-      i.CODID,
+    ${campoProduto},
 
-      m.DESCRICAO AS produto,
+    ${campoValor} AS valor
 
-      ${campoValor} AS valor
+  FROM pedido_materiais_itens_cliente i
 
-    FROM pedido_materiais_itens_cliente i
+  INNER JOIN pedido_materiais_cliente p
+    ON p.PEDIDO = i.PEDIDO
 
-    INNER JOIN pedido_materiais_cliente p
-      ON p.PEDIDO = i.PEDIDO
+  INNER JOIN Materiais filho
+    ON filho.CODID = i.CODID
 
-    INNER JOIN Materiais m
-    ON m.CODID = i.CODID
+  LEFT JOIN Materiais pai
+    ON pai.CODID =
+      CASE
+        WHEN filho.PAI = 0
+        THEN filho.CODID
+        ELSE filho.PAI
+      END
 
-    WHERE
+  WHERE
 
-      i.CODID IN (${placeholders})
+    i.CODID IN (${placeholders})
 
-      AND p.DATA BETWEEN
-        @dataInicial
-        AND @dataFinal
+    AND p.DATA BETWEEN
+      @dataInicial
+      AND @dataFinal
 
-    GROUP BY
+  GROUP BY
 
-      YEAR(p.DATA),
+    YEAR(p.DATA),
 
-      MONTH(p.DATA),
+    MONTH(p.DATA),
 
-      FORMAT(p.DATA, 'MM/yyyy'),
+    FORMAT(p.DATA, 'MM/yyyy'),
 
-      i.CODID,
+    ${groupByProduto}
 
-      m.DESCRICAO
+  ORDER BY
 
-    ORDER BY
+    YEAR(p.DATA),
 
-      YEAR(p.DATA),
-
-      MONTH(p.DATA)
-  `);
+    MONTH(p.DATA)
+`);
 
   console.log("Produtos:", produtosIds);
   console.log("Data Inicial:", dataInicial);

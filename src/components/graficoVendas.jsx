@@ -31,9 +31,10 @@ export default function GraficoVendas({
   dados = [],
   metrica,
   setMetrica,
+  agruparPorPai,
+  setAgruparPorPai,
 }) {
   const [chartType, setChartType] = useState("line");
-
 
   console.log("GRAFICO RECEBEU:", dados);
 
@@ -230,7 +231,6 @@ export default function GraficoVendas({
             className="chart-select"
           >
             <option value="quantidade">Quantidade Vendida</option>
-
             <option value="faturamento">Faturamento</option>
           </select>
 
@@ -242,6 +242,24 @@ export default function GraficoVendas({
             <option value="line">Linha</option>
             <option value="bar">Barra</option>
           </select>
+
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              color: "#fff",
+              fontSize: "14px",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={agruparPorPai}
+              onChange={(e) => setAgruparPorPai(e.target.checked)}
+            />
+            Agrupar por pai
+          </label>
         </div>
       </div>
 

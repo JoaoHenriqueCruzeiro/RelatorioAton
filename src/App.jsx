@@ -73,6 +73,8 @@ export default function App() {
 
   const [isFiltroOpen, setIsFiltroOpen] = useState(false);
 
+  const [agruparPorPai, setAgruparPorPai] = useState(false);
+
   const [filtros, setFiltros] = useState({
     fabricantes: [],
 
@@ -90,15 +92,12 @@ export default function App() {
     trocaTema(theme);
   }, [theme]);
 
-
   // ======================================================
   // CARREGA PRODUTOS
   // ======================================================
   useEffect(() => {
     carregarProdutos();
   }, []);
-
-
 
   async function carregarProdutos() {
     try {
@@ -111,7 +110,6 @@ export default function App() {
       console.timeEnd("buscarProdutosPais");
 
       console.time("setProdutos");
-
 
       requestAnimationFrame(() => {
         setProdutos(response);
@@ -161,7 +159,6 @@ export default function App() {
       console.log("PRODUTOS SELECIONADOS:");
       console.log(selectedProducts);
 
-
       // ==================================
       // TABELA
       // ==================================
@@ -190,6 +187,8 @@ export default function App() {
         dataFinal: converterData(dataFinal),
 
         metrica: metricaGrafico,
+
+        agruparPorPai,
       });
 
       console.log("DADOS GRAFICO:", grafico);
@@ -210,8 +209,6 @@ export default function App() {
     } finally {
       setLoadingTabela(false);
     }
-
-    
   }
 
   // ======================================================
@@ -372,6 +369,8 @@ export default function App() {
               dados={dadosGrafico}
               metrica={metricaGrafico}
               setMetrica={setMetricaGrafico}
+              agruparPorPai={agruparPorPai}
+              setAgruparPorPai={setAgruparPorPai}
             />
           </main>
         </div>
