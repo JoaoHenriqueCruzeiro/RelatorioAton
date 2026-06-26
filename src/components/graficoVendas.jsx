@@ -36,7 +36,7 @@ export default function GraficoVendas({
 }) {
   const [chartType, setChartType] = useState("line");
 
-  console.log("GRAFICO RECEBEU:", dados);
+  // console.log("GRAFICO RECEBEU:", dados);
 
   // ==========================================
   // MESES

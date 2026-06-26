@@ -30,7 +30,7 @@ import { trocaTema } from "./utils/trocatema";
 // ======================================================
 // TESTE WINDOW.API
 // ======================================================
-console.log("WINDOW API:", window.api);
+// console.log("WINDOW API:", window.api);
 
 // ======================================================
 // TEMAS
@@ -150,14 +150,14 @@ export default function App() {
         produtosIds = await window.api.buscarProdutosPorFiltro(filtros);
       }
 
-      console.log(dataInicial);
-      console.log(dataFinal);
-      console.log(typeof dataInicial);
+      // console.log(dataInicial);
+      // console.log(dataFinal);
+      // console.log(typeof dataInicial);
 
       setLoadingTabela(true);
 
-      console.log("PRODUTOS SELECIONADOS:");
-      console.log(selectedProducts);
+      // console.log("PRODUTOS SELECIONADOS:");
+      // console.log(selectedProducts);
 
       // ==================================
       // TABELA
