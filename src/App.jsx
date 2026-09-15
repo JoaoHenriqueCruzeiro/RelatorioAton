@@ -25,7 +25,6 @@ import SidebarProdutos from "./components/sidebarProdutos.jsx";
 import GraficoVendas from "./components/GraficoVendas";
 import ModalFiltros from "./components/modalFiltros";
 import { today, getLocalTimeZone } from "@internationalized/date";
-import { trocaTema } from "./utils/trocatema";
 
 // ======================================================
 // TESTE WINDOW.API
@@ -84,13 +83,6 @@ export default function App() {
   });
 
   const [selectedIds, setSelectedIds] = useState([]);
-
-  // ======================================================
-  // TEMA
-  // ======================================================
-  useEffect(() => {
-    trocaTema(theme);
-  }, [theme]);
 
   // ======================================================
   // CARREGA PRODUTOS

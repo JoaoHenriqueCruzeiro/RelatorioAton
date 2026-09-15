@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { trocaTema } from "../utils/trocatema";
 import "../styles/modalTemasStyle.css";
 
 const lightColors = [

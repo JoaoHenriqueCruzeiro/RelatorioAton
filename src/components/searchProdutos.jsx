@@ -1,6 +1,9 @@
 import { useState, useMemo, useEffect } from "react";
 
-export default function SearchProdutos({ onSelecionar }) {
+export default function SearchProdutos({
+  onSelecionar,
+  selected = [],
+}) {
   const [search, setSearch] = useState("");
   const [todosProdutos, setTodosProdutos] = useState([]);
 
@@ -26,6 +29,7 @@ export default function SearchProdutos({ onSelecionar }) {
   const resultados = useMemo(() => {
     const termo = search.trim().toLowerCase();
 
+    // Sem caracteres → não mostra resultados
     if (!termo) return [];
 
     return todosProdutos
@@ -33,26 +37,59 @@ export default function SearchProdutos({ onSelecionar }) {
       .slice(0, 15);
   }, [search, todosProdutos]);
 
+  function limparBusca() {
+    setSearch("");
+  }
+
+  function selecionar(item) {
+    onSelecionar(item);
+  }
+
   return (
     <div className="tree-search">
-      <input
-        type="text"
-        placeholder="Buscar produto..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
+      <div className="search-input-wrapper">
+        <input
+          type="text"
+          placeholder="Buscar produto..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+
+        {search.length > 0 && (
+          <button
+            type="button"
+            className="search-clear"
+            onClick={limparBusca}
+            aria-label="Limpar busca"
+          >
+            ×
+          </button>
+        )}
+      </div>
 
       {resultados.length > 0 && (
         <div className="search-results">
-          {resultados.map((item) => (
-            <div
-              key={item.id}
-              className="search-item"
-              onClick={() => onSelecionar(item)}
-            >
-              {item.nome}
-            </div>
-          ))}
+          {resultados.map((item) => {
+            const selecionado = selected.includes(String(item.id));
+
+            return (
+              <div
+                key={item.id}
+                className={`search-item ${
+                  selecionado ? "search-item-selected" : ""
+                }`}
+                onClick={() => selecionar(item)}
+              >
+                <span>{item.nome}</span>
+
+                {selecionado && (
+                  <span className="search-selected-icon">
+                    ✓
+                  </span>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

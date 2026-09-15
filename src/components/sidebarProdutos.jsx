@@ -81,7 +81,6 @@ export default function SidebarProdutos({
 
   const [expanded, setExpanded] = useState([]);
 
-
   const produtosEmArvore = useMemo(() => {
     console.time("formatarDados");
 
@@ -128,22 +127,26 @@ export default function SidebarProdutos({
   }
 
   function selecionarItemBusca(item) {
-    const id = String(item.id);
+  const id = String(item.id);
 
-    if (selected.includes(id)) {
-      return;
-    }
+  let novosSelecionados;
 
-    const novosSelecionados = [...selected, id];
-
-    setSelected(novosSelecionados);
-
-    const selecionados = produtos.filter((p) =>
-      novosSelecionados.includes(String(p.id)),
-    );
-
-    onSelectionChange?.(selecionados);
+  // Se já está selecionado → remove
+  if (selected.includes(id)) {
+    novosSelecionados = selected.filter((itemId) => itemId !== id);
+  } else {
+    // Se não está selecionado → adiciona
+    novosSelecionados = [...selected, id];
   }
+
+  setSelected(novosSelecionados);
+
+  const selecionados = produtos.filter((p) =>
+    novosSelecionados.includes(String(p.id)),
+  );
+
+  onSelectionChange?.(selecionados);
+}
 
   // ========================================
   // SELEÇÃO
@@ -204,7 +207,10 @@ export default function SidebarProdutos({
       </div>
 
       <div className="tree-search">
-        <SearchProdutos onSelecionar={selecionarItemBusca} />
+        <SearchProdutos
+          onSelecionar={selecionarItemBusca}
+          selected={selected}
+        />
       </div>
 
       <div className="tree-container">

@@ -179,3 +179,54 @@
 .MuiTreeItem-iconContainer {
   color: #ffffff !important;
 }
+
+.search-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.search-input-wrapper input {
+  width: 100%;
+  box-sizing: border-box;
+  padding-right: 32px;
+}
+
+.search-clear {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+
+  border: none;
+  background: transparent;
+
+  color: #9ca3af;
+  font-size: 20px;
+  line-height: 1;
+
+  cursor: pointer;
+
+  padding: 2px 5px;
+}
+
+.search-clear:hover {
+  color: #ff0000;
+}
+
+.search-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  cursor: pointer;
+}
+
+.search-item-selected {
+  background-color: rgba(124, 58, 237, 0.25);
+}
+
+.search-selected-icon {
+  color: #a78bfa;
+  font-weight: bold;
+  margin-left: 8px;
+}
